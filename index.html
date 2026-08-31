@@ -1,0 +1,1853 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>CodexでLINE絵文字40個を作るガイド｜貼るのはプロンプト2本だけ</title>
+<meta name="description" content="Codexにプロンプトを2回貼るだけで、絵の生成から40枚への分割・背景透過・180px化・連番・検査・提出用ZIPまで終わらせる手順。スマホだけで作るルートと、動くLINE絵文字への拡張プロンプトつき。">
+<style>
+/* ===== すみっち共通ブロック（sk kit / 2026-08） =====
+   配色・幅・角丸・フォントは全て --sk-* 変数。
+   ページごとの THEME で上書きして、元のデザインに馴染ませる。 */
+:root{
+ --sk-ink:#242130; --sk-muted:#6E6878;
+ --sk-accent:#4A3F68; --sk-accent2:#6F5F96;
+ --sk-line:#E5E0EB; --sk-page:#FCFBFE; --sk-card:#FFFFFF;
+ --sk-surface:#F7F5FB; --sk-soft:#EEEAF8;
+ --sk-warm:#FFF3EF; --sk-warm-bd:#F0CBC0; --sk-warm-ink:#68433A; --sk-warm-b:#B24826;
+ --sk-dark1:#242130; --sk-dark2:#33475D; --sk-hl:#FFD9CB;
+ --sk-green:#06C755;
+ --sk-radius:22px; --sk-radius-sm:16px;
+ --sk-wrap:660px;
+ --sk-shadow:0 12px 34px rgba(0,0,0,.07);
+ --sk-font:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;
+ --sk-serif:var(--sk-font);
+}
+/* 親が display:flex / grid のページでも潰れないようにする。
+   また、ページ側が *{box-sizing:border-box} を持たない場合に
+   padding分だけ横へはみ出すため、ここで明示的に指定する。 */
+.sk-author-strip,.sk-sec,.sk-gap,.sk-cta,.sk-footer{width:100%;max-width:100%;flex:0 0 100%;
+ grid-column:1/-1;align-self:stretch;display:block;box-sizing:border-box}
+.sk-author-strip *,.sk-sec *,.sk-gap *,.sk-cta *,.sk-footer *,
+.sk-author-strip *:before,.sk-sec *:before,.sk-gap *:before,.sk-cta *:before,.sk-footer *:before,
+.sk-author-strip *:after,.sk-sec *:after,.sk-gap *:after,.sk-cta *:after,.sk-footer *:after{box-sizing:border-box}
+.sk-sec{font-family:var(--sk-font);line-height:1.85;color:var(--sk-ink);background:var(--sk-page);
+ padding:56px 16px;margin:0;text-align:left;font-size:16px;font-weight:400}
+.sk-wrap{width:min(var(--sk-wrap),100%);margin:0 auto}
+.sk-head{text-align:center;margin-bottom:26px}
+.sk-kicker{display:block;font-size:12px;font-weight:900;letter-spacing:.18em;color:var(--sk-accent2)}
+.sk-sec h2.sk-h,.sk-gap h2.sk-h,.sk-cta h2.sk-h{font-family:var(--sk-serif);
+ font-size:clamp(24px,4.2vw,34px);line-height:1.4;margin:8px 0 0;color:inherit;font-weight:700;letter-spacing:-.01em}
+.sk-br{display:none}
+/* -- 著者カード -- */
+.sk-author-strip{padding:18px 16px;background:var(--sk-surface);border-bottom:1px solid var(--sk-line);
+ font-family:var(--sk-font)}
+.sk-author{display:flex;align-items:center;gap:14px;width:min(420px,100%);margin:0 auto;padding:10px 14px;
+ border-radius:var(--sk-radius-sm);background:var(--sk-card);border:1px solid var(--sk-line);
+ text-decoration:none;color:var(--sk-ink);box-shadow:var(--sk-shadow);
+ transition:transform .2s ease,box-shadow .2s ease}
+.sk-author:hover{transform:translateY(-2px)}
+.sk-author img{width:52px;height:52px;flex:none;border-radius:50%;background:#fff;display:block}
+.sk-author-txt{min-width:0}
+.sk-author-role,.sk-author-name,.sk-author-id{display:block}
+.sk-author-role{font-size:11px;color:var(--sk-muted);line-height:1.5}
+.sk-author-name{font-weight:900;font-size:16px;line-height:1.45;color:var(--sk-ink)}
+.sk-author-id{font-size:11px;color:var(--sk-muted);font-weight:400;line-height:1.5}
+.sk-author-arrow{margin-left:auto;color:var(--sk-muted);opacity:.6;font-weight:900;font-size:18px}
+/* -- 疑問3連 -- */
+.sk-doubt-lead{margin:0 auto 22px;text-align:center;color:var(--sk-muted);font-size:15px;line-height:1.9}
+.sk-doubts{display:grid;gap:11px}
+.sk-doubt{display:flex;gap:13px;align-items:flex-start;background:var(--sk-card);border:1px solid var(--sk-line);
+ border-radius:var(--sk-radius-sm);padding:15px 18px;box-shadow:var(--sk-shadow)}
+.sk-doubt .sk-no{flex:none;width:26px;height:26px;border-radius:8px;display:grid;place-items:center;
+ background:var(--sk-soft);color:var(--sk-accent);font-weight:900;font-size:12px}
+.sk-doubt p{margin:0;font-size:15px;line-height:1.8}
+.sk-answer{margin:18px 0 0;padding:19px 22px;border-left:5px solid var(--sk-accent2);background:var(--sk-soft);
+ border-radius:0 var(--sk-radius-sm) var(--sk-radius-sm) 0;font-size:14.5px;line-height:1.95}
+.sk-answer strong{color:var(--sk-accent)}
+.sk-answer .sk-n{font-weight:900;color:var(--sk-accent2)}
+/* -- 断絶 -- */
+.sk-gap{background:linear-gradient(160deg,var(--sk-dark1) 0%,var(--sk-dark2) 100%);color:#fff;
+ padding:64px 16px;font-family:var(--sk-font);line-height:1.85;font-size:16px}
+.sk-gap h2.sk-h{color:#fff}
+.sk-gap .sk-kicker{color:var(--sk-hl);opacity:.9}
+.sk-gap-lead{margin:0 auto;font-size:clamp(15.5px,2.2vw,17.5px);line-height:2;
+ color:rgba(255,255,255,.87);text-align:center}
+.sk-gap-lead strong{color:var(--sk-hl)}
+.sk-gap-list{width:min(560px,100%);margin:26px auto 0;list-style:none;padding:20px 22px;
+ background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.14);
+ border-radius:var(--sk-radius);display:grid;gap:12px}
+.sk-gap-list li{display:flex;gap:12px;font-size:14.5px;color:rgba(255,255,255,.9);line-height:1.7}
+.sk-gap-list li:before{content:"\25B8";color:var(--sk-hl);font-weight:900;flex:none}
+.sk-gap-close{margin:22px auto 0;color:rgba(255,255,255,.72);font-size:14.5px;text-align:center}
+/* -- ストーリー -- */
+.sk-story{width:min(620px,100%);margin:46px auto 0;background:var(--sk-card);color:var(--sk-ink);
+ border-radius:var(--sk-radius);padding:34px 28px 26px;box-shadow:0 24px 60px rgba(0,0,0,.28);position:relative}
+.sk-story-tag{position:absolute;top:-16px;left:50%;transform:translateX(-50%);white-space:nowrap;
+ background:var(--sk-dark1);color:#fff;border:4px solid var(--sk-card);border-radius:999px;
+ padding:6px 18px;font-weight:900;font-size:13px}
+.sk-story p{margin:0 0 14px;font-size:15px;line-height:1.9}
+.sk-story p:last-child{margin-bottom:0}
+.sk-punch{font-size:clamp(17px,2.8vw,20px);font-weight:900;line-height:1.7;color:var(--sk-accent);
+ border-bottom:3px solid var(--sk-soft);display:inline;padding-bottom:2px}
+.sk-habit{background:var(--sk-warm);border-left:5px solid var(--sk-warm-b);
+ border-radius:0 var(--sk-radius-sm) var(--sk-radius-sm) 0;
+ padding:15px 18px;color:var(--sk-warm-ink);font-size:14.5px;line-height:1.85}
+.sk-habit b{color:var(--sk-warm-b)}
+/* -- オファー＋CTA -- */
+.sk-cta{background:var(--sk-surface);padding:60px 16px 56px;font-family:var(--sk-font);
+ line-height:1.85;font-size:16px;color:var(--sk-ink)}
+.sk-bridge{margin:0 auto 22px;text-align:center;color:var(--sk-ink);opacity:.86;
+ font-size:clamp(15px,2.2vw,17px);font-weight:700;line-height:1.95}
+.sk-offer{width:min(560px,100%);margin:0 auto 24px;background:var(--sk-card);border:1px solid var(--sk-line);
+ border-radius:var(--sk-radius);padding:30px 24px;box-shadow:var(--sk-shadow);position:relative}
+.sk-offer-badge{position:absolute;top:-13px;right:18px;background:var(--sk-warm-b);color:#fff;font-weight:900;
+ font-size:12px;padding:6px 14px;border-radius:999px}
+.sk-offer h3{margin:0 0 18px;text-align:center;font-family:var(--sk-serif);
+ font-size:clamp(21px,3.6vw,27px);font-weight:700;line-height:1.4;color:var(--sk-ink)}
+.sk-cover{width:min(320px,100%);margin:0 auto 20px}
+.sk-cover img{width:100%;border-radius:12px;display:block}
+.sk-toc{background:var(--sk-surface);border:1px solid var(--sk-line);border-radius:var(--sk-radius-sm);padding:20px 22px}
+.sk-toc-head{text-align:center;font-weight:900;font-size:14px;padding-bottom:11px;margin:0 0 6px;
+ border-bottom:1px solid var(--sk-line);color:var(--sk-ink)}
+.sk-toc ul{list-style:none;margin:0;padding:0;display:grid;gap:9px}
+.sk-toc li{display:flex;gap:10px;font-size:14px;line-height:1.7;color:var(--sk-ink)}
+.sk-toc li:before{content:"\25C6";color:var(--sk-accent2);flex:none}
+.sk-toc li b{flex:none;white-space:nowrap;min-width:3.6em}
+.sk-offer-close{margin:20px 0 0;font-size:14px;color:var(--sk-muted);line-height:1.9}
+.sk-offer-close strong{color:var(--sk-accent)}
+.sk-line-btn{display:flex;flex-direction:column;align-items:center;gap:5px;width:min(560px,100%);margin:0 auto;
+ padding:19px 20px;border-radius:var(--sk-radius);background:var(--sk-green);color:#fff;font-weight:900;
+ text-decoration:none;box-shadow:0 16px 40px rgba(6,199,85,.30);position:relative;transition:transform .2s ease}
+.sk-line-btn:hover{transform:translateY(-3px)}
+.sk-line-btn:active{transform:translateY(0) scale(.99)}
+.sk-line-btn:after{content:"";position:absolute;inset:0;border-radius:inherit;
+ animation:skPulse 2.4s ease-out infinite;pointer-events:none}
+@keyframes skPulse{0%{box-shadow:0 0 0 0 rgba(9,126,42,.35)}70%{box-shadow:0 0 0 14px rgba(9,126,42,0)}
+ 100%{box-shadow:0 0 0 0 rgba(9,126,42,0)}}
+.sk-tap{font-size:12px;font-weight:800;background:rgba(255,255,255,.22);padding:3px 13px;border-radius:999px}
+.sk-btn-main{display:flex;align-items:center;gap:10px;font-size:clamp(17px,3vw,21px)}
+.sk-btn-main svg{width:24px;height:24px;flex:none}
+.sk-scarcity{width:min(560px,100%);margin:14px auto 0;padding:13px 16px;background:var(--sk-warm);
+ border:1px solid var(--sk-warm-bd);border-radius:var(--sk-radius-sm);color:var(--sk-warm-ink);
+ font-size:12.5px;line-height:1.85}
+.sk-note{text-align:center;color:var(--sk-muted);font-size:12px;margin:12px 0 0}
+/* -- コピー直後のひとこと（離脱ポイント対策）--
+   プロンプトをコピーした瞬間＝読者の目的達成。そこからCTAまで距離があるため、
+   その瞬間だけ画面下に小さく出す。押し売りにならないよう、
+   ページ側の配色を使い、8秒で自動的に消え、×で閉じられる。 */
+.sk-cue{position:fixed;left:50%;bottom:16px;z-index:99999;display:flex;align-items:center;gap:10px;
+ width:min(420px,calc(100% - 24px));padding:12px 14px;border-radius:14px;
+ background:var(--sk-dark1);color:#fff;font-family:var(--sk-font);font-size:13.5px;line-height:1.6;
+ box-shadow:0 14px 40px rgba(0,0,0,.34);text-decoration:none;
+ transform:translate(-50%,18px);opacity:0;pointer-events:none;
+ transition:opacity .28s ease,transform .28s ease}
+.sk-cue.is-on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
+.sk-cue b{color:var(--sk-hl)}
+.sk-cue .sk-cue-arrow{margin-left:auto;flex:none;font-weight:900;color:var(--sk-hl)}
+.sk-cue-x{position:absolute;top:-9px;right:-9px;width:24px;height:24px;border-radius:50%;border:0;
+ background:var(--sk-dark1);color:rgba(255,255,255,.8);font-size:14px;line-height:1;cursor:pointer;
+ box-shadow:0 4px 12px rgba(0,0,0,.3)}
+@media(prefers-reduced-motion:reduce){.sk-cue{transition:none}}
+/* -- フッター -- */
+.sk-footer{padding:40px 16px 56px;text-align:center;border-top:1px solid var(--sk-line);
+ background:var(--sk-surface);font-family:var(--sk-font);line-height:1.8}
+.sk-footer-ig{display:inline-flex;align-items:center;gap:9px;color:var(--sk-accent2);font-weight:850;
+ font-size:14px;text-decoration:none;margin-bottom:14px}
+.sk-footer-ig:hover{text-decoration:underline}
+.sk-footer-ig svg{width:19px;height:19px}
+.sk-footer p{margin:0 0 4px;font-size:13px;color:var(--sk-muted)}
+.sk-footer .sk-copy{margin:6px 0 0;font-size:11.5px;color:var(--sk-muted);opacity:.75}
+.sk-footer .sk-tagline{margin:0 0 12px;font-size:12px;color:var(--sk-muted);opacity:.85;letter-spacing:.03em}
+@media(prefers-reduced-motion:reduce){.sk-line-btn:after{animation:none}}
+@media(max-width:600px){
+ .sk-br{display:inline}
+ .sk-sec{padding:44px 14px}
+ .sk-gap{padding:48px 14px}
+ .sk-cta{padding:48px 14px 44px}
+ .sk-story{padding:28px 17px 22px;margin-top:38px}
+ .sk-story-tag{font-size:11.5px;padding:6px 14px}
+ .sk-offer{padding:24px 16px}
+ .sk-toc{padding:16px 14px}
+ .sk-gap-list{padding:17px 16px}
+ .sk-author{padding:9px 11px;gap:11px}
+ .sk-author img{width:46px;height:46px}
+ .sk-footer{padding:34px 14px 48px}
+}
+
+/* --- このページ用のテーマ上書き --- */
+:root{ --sk-ink:#241F33; --sk-muted:#736C86; --sk-accent:#6D4AD8; --sk-accent2:#12A5A0; --sk-line:#E7E3F3; --sk-page:#FBFAFF; --sk-card:#FFFFFF; --sk-surface:#F3F1FB; --sk-soft:#EBE5FB; --sk-warm:#FFF3E6; --sk-warm-bd:#F2CFA6; --sk-warm-ink:#5A3E22; --sk-warm-b:#C87A2A; --sk-dark1:#161227; --sk-dark2:#2C2350; --sk-hl:#B9A2FF; --sk-radius:22px; --sk-radius-sm:16px; --sk-shadow:0 14px 38px rgba(36,31,51,.10); --sk-wrap:680px; --sk-font:-apple-system,BlinkMacSystemFont,"Noto Sans JP","Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif; --sk-serif:"Noto Serif JP","Yu Mincho",serif; }
+
+/* ===== fresh kit（新規ページ用の本文ブロック） =====
+   ギャラリーの横スクロールが body 全体の横スクロールに漏れないよう、
+   このページ独自にリセットを持たせる（既存ページの reset に依存しない）。 */
+*,*::before,*::after{box-sizing:border-box}
+html,body{max-width:100%;overflow-x:hidden}
+.fk-hero{position:relative;background:linear-gradient(160deg,var(--sk-dark1) 0%,var(--sk-dark2) 100%);
+ color:#fff;padding:52px 16px 44px;text-align:center;font-family:var(--sk-font);overflow:hidden}
+.fk-hero-bg{position:absolute;inset:0;z-index:0}
+.fk-hero-bg img{width:100%;height:100%;object-fit:cover;display:block}
+.fk-hero-bg::after{content:"";position:absolute;inset:0;
+ background:linear-gradient(180deg,rgba(10,12,16,.55) 0%,rgba(10,12,16,.72) 55%,rgba(10,12,16,.88) 100%)}
+.fk-hero-badge,.fk-hero h1,.fk-hero-sub,.fk-metrics{position:relative;z-index:1}
+.fk-hero-badge{display:inline-block;background:rgba(255,255,255,.14);border:1px solid rgba(255,255,255,.3);
+ border-radius:999px;font-size:11.5px;letter-spacing:.14em;padding:5px 16px;margin-bottom:18px;
+ backdrop-filter:blur(2px)}
+.fk-hero h1{font-family:var(--sk-serif);font-size:clamp(24px,5.6vw,34px);font-weight:700;line-height:1.5;
+ margin:0 0 14px;text-shadow:0 2px 16px rgba(0,0,0,.4)}
+.fk-hero h1 em{font-style:normal;color:var(--sk-hl)}
+.fk-hero-sub{font-size:clamp(13.5px,2.6vw,15.5px);line-height:1.9;color:rgba(255,255,255,.9);
+ max-width:520px;margin:0 auto;text-shadow:0 1px 8px rgba(0,0,0,.35)}
+.fk-metrics{display:flex;flex-wrap:wrap;justify-content:center;gap:9px;margin-top:22px}
+.fk-metrics span{background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.26);border-radius:999px;
+ padding:6px 15px;font-size:12.5px}
+.fk-metrics span b{color:var(--sk-hl);font-weight:900;margin-right:3px}
+
+.fk-flow{padding:44px 16px 8px;font-family:var(--sk-font)}
+.fk-flow-diagram{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:4px;
+ background:var(--sk-card);border:1px solid var(--sk-line);border-radius:var(--sk-radius);
+ padding:26px 16px;box-shadow:var(--sk-shadow);max-width:640px;margin:0 auto}
+.fk-flow-node{flex:1 1 120px;max-width:150px;text-align:center}
+.fk-flow-icon{display:flex;align-items:center;justify-content:center;margin:0 auto 8px}
+.fk-flow-icon-num{width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+ background:var(--sk-soft);color:var(--sk-accent);font-weight:900;font-size:15px}
+.fk-flow-tool{font-size:11px;font-weight:900;color:var(--sk-accent2);letter-spacing:.02em}
+.fk-flow-name{font-size:12.5px;font-weight:700;color:var(--sk-ink);margin-top:1px}
+.fk-flow-arrow{flex:0 0 auto;font-size:1.3rem;color:var(--sk-line);font-weight:700;align-self:center}
+@media(max-width:600px){.fk-flow-diagram{flex-direction:column}.fk-flow-arrow{transform:rotate(90deg)}
+ .fk-flow-node{max-width:none}}
+
+.fk-steps{padding:48px 16px 8px;font-family:var(--sk-font)}
+.fk-steps-wrap{max-width:640px;margin:0 auto;position:relative}
+.fk-steps-wrap:before{content:"";position:absolute;left:23px;top:10px;bottom:10px;width:2px;
+ background:var(--sk-line)}
+.fk-step{position:relative;display:flex;gap:18px;padding-bottom:30px}
+.fk-step:last-child{padding-bottom:0}
+.fk-step-num{flex:0 0 48px;width:48px;height:48px;border-radius:50%;display:flex;align-items:center;
+ justify-content:center;font-weight:900;font-size:17px;color:#fff;background:var(--sk-accent);
+ position:relative;z-index:1;box-shadow:var(--sk-shadow)}
+.fk-step-body{flex:1;min-width:0;background:var(--sk-card);border:1px solid var(--sk-line);
+ border-radius:var(--sk-radius-sm);padding:18px 20px;margin-top:2px}
+.fk-step-label{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:900;letter-spacing:.1em;
+ color:var(--sk-accent2);text-transform:uppercase;margin-bottom:4px}
+.fk-step-icon{display:inline-flex;flex:none}
+.fk-step-title{font-family:var(--sk-serif);font-size:17px;font-weight:700;margin-bottom:9px;color:var(--sk-ink)}
+.fk-step-text{font-size:14.5px;line-height:1.9;color:var(--sk-ink);margin-bottom:10px}
+.fk-step-text:last-child{margin-bottom:0}
+.fk-checklist{display:flex;flex-wrap:wrap;gap:7px;margin-top:8px}
+.fk-checklist span{font-size:12.5px;font-weight:700;padding:5px 12px;border-radius:999px;
+ background:var(--sk-surface);color:var(--sk-ink);border:1px solid var(--sk-line)}
+/* 折りたたみ式プロンプトボックス（2026-08-19〜）。長いプロンプトが常時全文
+   表示されるとページが間延びして最後まで読まれなくなる、との指摘で開閉式に変更。
+   コピーボタンはsummary内＝常に見える位置に置き、閉じたままコピーできるようにする。 */
+.fk-prompt{background:var(--sk-dark1);color:#E7E9EC;border-radius:12px;margin-top:12px;overflow:hidden}
+.fk-prompt-h{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:10px 13px;
+ border-bottom:1px solid rgba(255,255,255,.13);font-size:11px;letter-spacing:.06em;cursor:pointer;
+ list-style:none}
+.fk-prompt-h::-webkit-details-marker{display:none}
+.fk-prompt-h>span:first-child{color:var(--sk-hl);font-weight:900;overflow:hidden;text-overflow:ellipsis;
+ white-space:nowrap}
+.fk-prompt-h-right{display:flex;align-items:center;gap:9px;flex:none}
+.fk-prompt-copy{background:rgba(255,255,255,.14);border:0;color:#fff;border-radius:999px;
+ padding:4px 12px;font-size:11px;font-weight:700;cursor:pointer}
+.fk-prompt-arrow{color:rgba(255,255,255,.55);font-size:11px;transition:transform .2s ease}
+.fk-prompt[open] .fk-prompt-arrow{transform:rotate(180deg)}
+.fk-prompt pre{margin:0;padding:14px;font-size:12px;line-height:1.95;white-space:pre-wrap;
+ font-family:var(--sk-font);color:#DFE2E6}
+.fk-prompt pre i{font-style:normal;color:var(--sk-hl)}
+.fk-step-img{width:100%;border-radius:12px;margin-top:12px;overflow:hidden;border:1px solid var(--sk-line)}
+.fk-step-img img{width:100%;display:block}
+.fk-step-img-cap{font-size:11.5px;color:var(--sk-muted);text-align:center;padding:6px 4px 0}
+.fk-step-img-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+@media(max-width:520px){.fk-step-img-grid{grid-template-columns:1fr}}
+
+.fk-step0{max-width:640px;margin:0 auto 30px;background:var(--sk-surface);border:1px dashed var(--sk-line);
+ border-radius:var(--sk-radius-sm);overflow:hidden}
+.fk-step0 summary{list-style:none;cursor:pointer;display:flex;align-items:center;gap:10px;padding:16px 20px;
+ font-family:var(--sk-font);user-select:none}
+.fk-step0 summary::-webkit-details-marker{display:none}
+.fk-step0-badge{flex:none;font-size:11px;font-weight:900;letter-spacing:.06em;color:#fff;background:var(--sk-accent);
+ padding:4px 10px;border-radius:999px}
+.fk-step0-title{flex:1;font-weight:800;font-size:14.5px;color:var(--sk-ink)}
+.fk-step0-arrow{flex:none;color:var(--sk-muted);transition:transform .2s ease}
+.fk-step0[open] .fk-step0-arrow{transform:rotate(180deg)}
+.fk-step0-body{padding:0 20px 20px;font-family:var(--sk-font)}
+
+/* デスクトップ既定: 縦積みで3枚とも普通にスクロールして全部見える（スワイプ不要）。
+   狭い画面（スマホ）だけ横スワイプのカルーセルに切り替える。 */
+.fk-pcard-track{display:flex;flex-direction:column;gap:14px;padding:14px 2px 8px}
+.fk-pcard{flex:none;width:100%;max-width:none;background:var(--sk-card);
+ border:1px solid var(--sk-line);border-radius:var(--sk-radius-sm);padding:16px 18px}
+.fk-pcard-tag{display:inline-block;font-size:11px;font-weight:900;letter-spacing:.04em;color:var(--sk-accent2);
+ background:var(--sk-soft);padding:3px 10px;border-radius:999px;margin-bottom:8px}
+.fk-pcard-title{font-family:var(--sk-serif);font-size:16px;font-weight:700;margin-bottom:6px;color:var(--sk-ink)}
+.fk-pcard-text{font-size:13.5px;line-height:1.85;color:var(--sk-ink);margin-bottom:8px}
+.fk-pcard-hint{display:none;text-align:center;font-size:11.5px;font-weight:800;color:var(--sk-accent2);margin:2px 0 4px}
+@media(max-width:700px){
+ .fk-pcard-hint{display:block}
+ .fk-pcard-track{flex-direction:row;overflow-x:auto;scroll-snap-type:x mandatory;
+  -webkit-overflow-scrolling:touch;scrollbar-width:none}
+ .fk-pcard-track::-webkit-scrollbar{display:none}
+ .fk-pcard{flex:0 0 86%;max-width:420px;scroll-snap-align:center}
+}
+
+.fk-note{max-width:640px;margin:0 auto;padding:16px 18px;border-left:4px solid var(--sk-warm-b);
+ background:var(--sk-warm);border-radius:0 var(--sk-radius-sm) var(--sk-radius-sm) 0;
+ color:var(--sk-warm-ink);font-size:13.5px;line-height:1.9}
+.fk-note b{color:var(--sk-warm-b)}
+.fk-note-section{padding:40px 16px 8px;font-family:var(--sk-font)}
+.fk-note + .fk-note{margin-top:12px}
+
+.fk-faq{padding:44px 16px 8px;font-family:var(--sk-font)}
+.fk-faq-wrap{max-width:640px;margin:0 auto;display:grid;gap:10px}
+.fk-faq-item{background:var(--sk-card);border:1px solid var(--sk-line);border-radius:var(--sk-radius-sm);
+ padding:16px 18px}
+.fk-faq-q{display:flex;gap:10px;font-weight:900;font-size:14.5px;color:var(--sk-ink);margin-bottom:6px}
+.fk-faq-q span{flex:none;width:22px;height:22px;border-radius:50%;background:var(--sk-accent);color:#fff;
+ font-size:11px;display:flex;align-items:center;justify-content:center}
+.fk-faq-a{font-size:13.5px;line-height:1.85;color:var(--sk-muted);padding-left:32px}
+.fk-faq-item.is-fold{padding:0}
+.fk-faq-item.is-fold>summary{list-style:none;cursor:pointer;padding:15px 16px;margin:0;
+ align-items:center}
+.fk-faq-item.is-fold>summary::-webkit-details-marker{display:none}
+.fk-faq-item.is-fold>summary::after{content:"\25BE";margin-left:auto;flex:none;
+ color:var(--sk-accent);font-size:11px;transition:transform .2s}
+.fk-faq-item.is-fold[open]>summary::after{transform:rotate(180deg)}
+.fk-faq-item.is-fold>.fk-faq-a{padding:0 16px 15px 48px}
+
+.fk-section-eyebrow{font-size:11px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+ color:var(--sk-accent2);margin-bottom:6px;text-align:center}
+.fk-section-title{font-family:var(--sk-serif);font-size:clamp(19px,3.6vw,24px);font-weight:700;
+ margin-bottom:20px;text-align:center;color:var(--sk-ink)}
+
+.fk-gallery{padding:44px 0 8px;font-family:var(--sk-font)}
+.fk-gallery-lead{max-width:640px;margin:0 auto 18px;padding:0 16px;text-align:center;color:var(--sk-muted);
+ font-size:13.5px;line-height:1.85}
+.fk-gallery-hint{max-width:640px;margin:0 auto 14px;padding:0 16px;text-align:center;color:var(--sk-accent2);
+ font-size:11.5px;font-weight:800;letter-spacing:.04em}
+.fk-gallery-track{max-width:640px;margin:0 auto;display:flex;gap:14px;overflow-x:auto;
+ scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;padding:4px 16px 14px;scrollbar-width:none}
+.fk-gallery-track::-webkit-scrollbar{display:none}
+.fk-gallery-item{flex:0 0 68%;max-width:260px;scroll-snap-align:center;border-radius:var(--sk-radius-sm);
+ overflow:hidden;background:var(--sk-card);border:1px solid var(--sk-line);box-shadow:var(--sk-shadow);
+ cursor:zoom-in}
+.fk-gallery-item img{display:block;width:100%;aspect-ratio:1/1;object-fit:cover}
+.fk-gallery-cap{padding:8px 6px;text-align:center;font-size:11px;font-weight:800;color:var(--sk-muted)}
+.fk-gallery-lightbox{position:fixed;inset:0;z-index:99998;background:rgba(20,16,12,.9);
+ display:none;align-items:center;justify-content:center;padding:24px;cursor:zoom-out}
+.fk-gallery-lightbox.is-on{display:flex}
+.fk-gallery-lightbox img{max-width:min(92vw,520px);max-height:80vh;width:100%;border-radius:14px;
+ object-fit:contain;box-shadow:0 20px 60px rgba(0,0,0,.5)}
+.fk-gallery-lightbox-x{position:absolute;top:18px;right:18px;width:38px;height:38px;border-radius:50%;
+ border:0;background:rgba(255,255,255,.16);color:#fff;font-size:18px;cursor:pointer}
+
+/* ===== spec_kit ===== */
+.sp-sec{padding:56px 16px;font-family:var(--sk-font);color:var(--sk-ink);
+ box-sizing:border-box;width:100%}
+.sp-sec *,.sp-sec *:before,.sp-sec *:after{box-sizing:border-box}
+.sp-wrap{width:min(var(--sk-wrap),100%);margin:0 auto}
+.sp-eyebrow{margin:0 0 10px;text-align:center;font-size:11.5px;font-weight:900;
+ letter-spacing:.14em;color:var(--sk-accent2);text-transform:uppercase}
+.sp-title{margin:0 0 14px;text-align:center;font-weight:900;line-height:1.55;
+ font-size:clamp(19px,4.2vw,25px);color:var(--sk-ink)}
+.sp-lead{margin:0 auto 26px;max-width:34em;text-align:center;line-height:2;
+ font-size:clamp(14px,2.5vw,15.5px);color:var(--sk-muted)}
+.sp-lead strong{color:var(--sk-ink);font-weight:900}
+.sp-src{margin:16px 0 0;text-align:center;font-size:11.5px;line-height:1.9;
+ color:var(--sk-muted)}
+.sp-src a{color:var(--sk-accent2);font-weight:700}
+
+/* 数値の対比 */
+.sp-stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.sp-stat{background:var(--sk-card);border:1px solid var(--sk-line);
+ border-radius:var(--sk-radius);padding:20px 16px;text-align:center;
+ box-shadow:var(--sk-shadow)}
+.sp-stat-k{margin:0 0 12px;font-size:12.5px;font-weight:900;color:var(--sk-muted)}
+.sp-stat-row{display:flex;align-items:center;justify-content:center;gap:10px;flex-wrap:wrap}
+.sp-stat-old{font-size:clamp(15px,3vw,17px);font-weight:800;color:var(--sk-muted);
+ text-decoration:line-through;text-decoration-thickness:2px;opacity:.75}
+.sp-stat-ar{color:var(--sk-accent);font-weight:900;font-size:15px}
+.sp-stat-new{font-size:clamp(23px,5.4vw,30px);font-weight:900;color:var(--sk-accent);
+ line-height:1.2;letter-spacing:-.01em}
+.sp-stat-n{margin:10px 0 0;font-size:12px;line-height:1.85;color:var(--sk-muted)}
+
+/* 規格表 */
+.sp-table{background:var(--sk-card);border:1px solid var(--sk-line);
+ border-radius:var(--sk-radius);box-shadow:var(--sk-shadow);overflow:hidden}
+.sp-table-cap{margin:0;padding:15px 18px;background:var(--sk-surface);
+ border-bottom:1px solid var(--sk-line);font-size:13px;font-weight:900;
+ color:var(--sk-ink);letter-spacing:.01em}
+.sp-row{display:flex;gap:12px;padding:13px 18px;border-bottom:1px solid var(--sk-line);
+ font-size:13.5px;line-height:1.8}
+.sp-row:last-child{border-bottom:0}
+.sp-row dt{flex:0 0 40%;margin:0;font-weight:800;color:var(--sk-muted)}
+.sp-row dd{flex:1;margin:0;font-weight:800;color:var(--sk-ink)}
+.sp-row dd b{color:var(--sk-accent);font-weight:900}
+@media(max-width:400px){
+ .sp-row{flex-direction:column;gap:3px}
+ .sp-row dt{flex:none}
+}
+
+/* 2つのやり方を比べる */
+.sp-cmp{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:600px){.sp-cmp{grid-template-columns:1fr}}
+.sp-col{border-radius:var(--sk-radius);padding:22px 18px 20px;border:1px solid var(--sk-line);
+ background:var(--sk-card);display:flex;flex-direction:column}
+.sp-col.is-win{border:2px solid var(--sk-accent);background:var(--sk-soft);
+ box-shadow:var(--sk-shadow)}
+.sp-col-tag{align-self:flex-start;font-size:11px;font-weight:900;letter-spacing:.06em;
+ padding:4px 11px;border-radius:999px;background:var(--sk-surface);color:var(--sk-muted)}
+.sp-col.is-win .sp-col-tag{background:var(--sk-accent);color:#fff}
+.sp-col-h{margin:12px 0 4px;font-size:clamp(15.5px,3.2vw,17.5px);font-weight:900;
+ line-height:1.6;color:var(--sk-ink)}
+.sp-col.is-win .sp-col-h{color:var(--sk-ink)}
+.sp-col-sub{margin:0 0 14px;font-size:12.5px;font-weight:800;color:var(--sk-muted)}
+.sp-col ol{margin:0;padding:0 0 0 1.15em;list-style:decimal}
+.sp-col li{margin:0 0 9px;font-size:13.5px;line-height:1.85;color:var(--sk-ink);opacity:.9}
+.sp-col li:last-child{margin-bottom:0}
+.sp-col li b{font-weight:900;opacity:1}
+.sp-col.is-win li{color:var(--sk-ink);opacity:1}
+.sp-col-foot{margin:16px 0 0;padding-top:14px;border-top:1px dashed var(--sk-line);
+ font-size:12.5px;font-weight:900;line-height:1.8;color:var(--sk-muted)}
+.sp-col.is-win .sp-col-foot{border-top-color:var(--sk-accent);color:var(--sk-accent)}
+
+/* 流れを止めて置く注意 */
+.sp-callout{width:min(560px,100%);margin:0 auto;background:var(--sk-warm);
+ border:1px solid var(--sk-warm-bd);border-radius:var(--sk-radius);
+ padding:22px 20px;color:var(--sk-warm-ink)}
+.sp-callout>b{display:block;margin:0 0 8px;font-size:14.5px;font-weight:900;
+ color:var(--sk-warm-b)}
+.sp-callout p{margin:0;font-size:13.5px;line-height:2;font-weight:700}
+.sp-callout p b{display:inline;color:var(--sk-warm-b);font-weight:900}
+
+/* 画像を並べて見せる（実物の証拠） */
+.sp-shots{display:grid;gap:14px}
+.sp-shot{background:var(--sk-card);border:1px solid var(--sk-line);
+ border-radius:var(--sk-radius);overflow:hidden;box-shadow:var(--sk-shadow)}
+.sp-shot img{display:block;width:100%;height:auto}
+.sp-shot p{margin:0;padding:12px 16px;border-top:1px solid var(--sk-line);
+ background:var(--sk-surface);font-size:12.5px;line-height:1.8;font-weight:800;
+ color:var(--sk-muted)}
+.sp-shot p b{color:var(--sk-ink);font-weight:900}
+/* ルートの入口（#28の「ここから道が2つに分かれる」） */
+.sp-route{padding-bottom:22px}
+.sp-route-badge{display:inline-block;font-size:11.5px;font-weight:900;letter-spacing:.1em;
+ padding:5px 14px;border-radius:999px;background:var(--sk-surface);color:var(--sk-muted)}
+.sp-route.is-main .sp-route-badge{background:var(--sk-accent);color:#fff}
+.sp-route-head{text-align:center}
+.sp-route-title{margin:14px 0 6px;font-weight:900;line-height:1.5;
+ font-size:clamp(21px,4.8vw,28px);color:var(--sk-ink)}
+.sp-route-path{margin:0 0 18px;font-size:13px;font-weight:900;color:var(--sk-accent2);
+ letter-spacing:.02em}
+.sp-route-meta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:18px}
+.sp-route-meta span{font-size:12px;font-weight:800;color:var(--sk-muted);
+ background:var(--sk-card);border:1px solid var(--sk-line);border-radius:999px;
+ padding:7px 14px}
+.sp-route-meta span b{color:var(--sk-ink);font-weight:900}
+/* ルート切り替えタブ（#28。縦に全部並べると長すぎるので、押した道だけ出す） */
+.sp-tabs{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:4px}
+@media(max-width:560px){.sp-tabs{grid-template-columns:1fr}}
+.sp-tab{appearance:none;-webkit-appearance:none;text-align:left;cursor:pointer;
+ font-family:inherit;background:var(--sk-card);border:2px solid var(--sk-line);
+ border-radius:var(--sk-radius);padding:18px 18px 16px;transition:.18s;
+ display:flex;flex-direction:column;gap:5px;position:relative}
+.sp-tab:hover{border-color:var(--sk-accent2)}
+.sp-tab-k{font-size:11px;font-weight:900;letter-spacing:.08em;color:var(--sk-muted)}
+.sp-tab-h{font-size:clamp(16px,3.4vw,18.5px);font-weight:900;color:var(--sk-ink);line-height:1.5}
+.sp-tab-s{font-size:12.5px;font-weight:800;color:var(--sk-muted);line-height:1.7}
+.sp-tab[aria-selected="true"]{border-color:var(--sk-accent);background:var(--sk-soft);
+ box-shadow:var(--sk-shadow)}
+.sp-tab[aria-selected="true"] .sp-tab-k{color:var(--sk-accent)}
+.sp-tab[aria-selected="true"]::after{content:"";position:absolute;left:50%;bottom:-13px;
+ width:20px;height:20px;margin-left:-10px;background:var(--sk-soft);
+ border-right:2px solid var(--sk-accent);border-bottom:2px solid var(--sk-accent);
+ transform:rotate(45deg);border-radius:0 0 5px 0}
+@media(max-width:560px){.sp-tab[aria-selected="true"]::after{display:none}}
+.sp-panel[hidden]{display:none}
+
+/* フォルダの中身を見せる（文字だけだと絶対に伝わらないところ用） */
+.sp-tree{width:min(420px,100%);margin:0 auto;background:var(--sk-dark1);
+ border-radius:var(--sk-radius);padding:20px 22px;
+ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+ font-size:13px;line-height:2.05;color:#DCD6F0}
+.sp-tree b{color:var(--sk-hl);font-weight:700}
+.sp-tree i{font-style:normal;color:#7E769B}
+.sp-tree-cap{margin:12px auto 0;width:min(420px,100%);font-size:12px;line-height:1.85;
+ font-weight:800;color:var(--sk-muted);text-align:center}
+
+/* スマホだけに出す、追従の公式LINEボタン。
+   最後まで読み切らずに離脱する人にも入口を残しておくためのもの。
+   ただし「常に出しっぱなし」は邪魔なので、
+   ①1画面ぶんスクロールするまで出さない ②本物のCTAが画面に入ったら消える
+   ③×で閉じたらそのセッション中は二度と出ない、の3点で抑えている。
+   PC(701px以上)では出さない（本文の脇に余白があるので邪魔になるだけ）。*/
+.sp-dock{position:fixed;left:50%;bottom:12px;z-index:99998;
+ display:flex;align-items:center;gap:11px;
+ width:min(520px,calc(100% - 20px));padding:13px 16px;
+ border-radius:999px;background:var(--sk-green);color:#fff;
+ font-family:var(--sk-font);text-decoration:none;
+ box-shadow:0 12px 34px rgba(6,199,85,.36);
+ transform:translate(-50%,120%);opacity:0;pointer-events:none;
+ transition:opacity .3s ease,transform .3s cubic-bezier(.2,.7,.3,1)}
+.sp-dock.is-on{transform:translate(-50%,0);opacity:1;pointer-events:auto}
+.sp-dock svg{width:22px;height:22px;flex:none}
+.sp-dock-t{flex:1;min-width:0;font-size:14.5px;font-weight:900;line-height:1.4}
+.sp-dock-t small{display:block;font-size:11px;font-weight:800;opacity:.85;letter-spacing:.02em}
+.sp-dock-a{flex:none;font-size:16px;font-weight:900}
+.sp-dock-x{position:absolute;top:-8px;right:2px;width:26px;height:26px;border-radius:50%;
+ border:0;background:var(--sk-dark1);color:rgba(255,255,255,.85);font-size:14px;line-height:1;
+ cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.3)}
+@media(min-width:701px){.sp-dock{display:none}}
+@media(prefers-reduced-motion:reduce){.sp-dock{transition:none}}
+/* 追従ボタンが出ている間は、フッターの最後が隠れないように床を上げる */
+body.sp-has-dock{padding-bottom:78px}
+@media(min-width:701px){body.sp-has-dock{padding-bottom:0}}
+/* コピー直後のひとこと(sk-cue)と重ならないように、そちらを上へ逃がす */
+body.sp-has-dock .sk-cue{bottom:80px}
+
+/* スクロールで1枚ずつ入ってくる動き。JSが無ければ何も起きない（=常時表示）。
+   「全部を真面目に読む人ばかりではない」ので、目を留める理由を足す。 */
+.sp-rv{opacity:0;transform:translateY(14px);
+ transition:opacity .5s ease,transform .5s cubic-bezier(.2,.7,.3,1)}
+.sp-rv.is-in{opacity:1;transform:none}
+@media(prefers-reduced-motion:reduce){.sp-rv,.sp-rv.is-in{opacity:1;transform:none;transition:none}}
+
+/* 「必要な人だけ開く」ための折りたたみ（規格表など） */
+.sp-fold{background:var(--sk-card);border:1px solid var(--sk-line);
+ border-radius:var(--sk-radius);overflow:hidden;box-shadow:var(--sk-shadow)}
+.sp-fold>summary{list-style:none;cursor:pointer;padding:17px 20px;font-size:13.5px;
+ font-weight:900;color:var(--sk-ink);display:flex;align-items:center;
+ justify-content:space-between;gap:12px}
+.sp-fold>summary::-webkit-details-marker{display:none}
+.sp-fold>summary::after{content:"\25BE";color:var(--sk-accent);font-size:12px;
+ transition:transform .2s;flex:none}
+.sp-fold[open]>summary::after{transform:rotate(180deg)}
+.sp-fold[open]>summary{border-bottom:1px solid var(--sk-line)}
+.sp-fold-body{padding:16px 14px 4px}
+.sp-fold-body .sp-table{box-shadow:none}
+
+/* ===== 終盤ブロック改修（2026-08-24 第2稿） ===== */
+.sk-diff{background:var(--sk-page);padding:66px 16px 60px;font-family:var(--sk-font);
+ color:var(--sk-ink);width:100%;max-width:100%;flex:0 0 100%;box-sizing:border-box}
+.sk-diff *,.sk-diff *:before,.sk-diff *:after{box-sizing:border-box}
+.sk-diff .sk-wrap{width:min(var(--sk-wrap),100%);margin:0 auto}
+.sk-d-p{margin:0 auto 32px;text-align:center;line-height:2.05;
+ font-size:clamp(15px,2.4vw,16.5px);color:var(--sk-ink);opacity:.88}
+.sk-d-p:last-child{margin-bottom:0}
+.sk-d-p b{color:var(--sk-ink);font-weight:900}
+.sk-bridge b{color:var(--sk-accent);font-weight:900}
+.sk-bridge strong{color:var(--sk-ink);font-weight:900}
+
+/* 質問カード */
+.sk-d-q{width:min(500px,100%);margin:0 auto 38px;background:var(--sk-card);
+ border:1px solid var(--sk-line);border-radius:var(--sk-radius);
+ padding:36px 22px 30px;box-shadow:var(--sk-shadow);position:relative;text-align:center}
+.sk-d-q-tag{position:absolute;top:-13px;left:50%;transform:translateX(-50%);white-space:nowrap;
+ background:var(--sk-ink);color:#fff;border:4px solid var(--sk-page);border-radius:999px;
+ padding:5px 16px;font-size:11.5px;font-weight:900;letter-spacing:.02em}
+.sk-d-q p{margin:0;font-weight:800;line-height:1.9;color:var(--sk-ink);
+ font-size:clamp(16.5px,3.6vw,20px)}
+.sk-d-q b{color:var(--sk-accent);border-bottom:3px solid var(--sk-soft);padding-bottom:2px}
+
+/* 結論 */
+.sk-d-lead{margin:0 auto 20px;text-align:center;font-weight:900;line-height:1.85;
+ color:var(--sk-ink);font-size:clamp(17px,3.4vw,21px)}
+.sk-d-ans{width:min(500px,100%);margin:0 auto 26px;background:var(--sk-soft);
+ border-radius:var(--sk-radius);padding:30px 20px;text-align:center;
+ color:var(--sk-accent);font-weight:800;line-height:1.95;
+ font-size:clamp(15.5px,2.9vw,18px)}
+.sk-d-ans b{display:inline-block;font-weight:900;margin:4px 0 6px;
+ font-size:clamp(18.5px,4vw,23px);line-height:1.6;
+ border-bottom:3px solid rgba(0,0,0,.10);padding-bottom:3px}
+.sk-d-close{margin:0 auto;text-align:center;font-weight:800;line-height:1.9;
+ color:var(--sk-muted);font-size:clamp(14.5px,2.6vw,16.5px)}
+
+/* 冒頭の「最後まで読んでほしい」一行 */
+.sk-lastnote{margin:18px auto 0;width:min(560px,100%);text-align:center;
+ font-size:13.5px;line-height:1.95;color:var(--sk-muted);font-weight:700}
+.sk-lastnote strong{color:var(--sk-accent);font-weight:900}
+
+/* LINEボタンの下に置く教科書（おまけ扱い） */
+.sk-extra{width:min(500px,100%);margin:24px auto 0;padding:22px 18px 0;
+ border-top:1px solid var(--sk-line);text-align:center;
+ font-size:14px;line-height:1.95;color:var(--sk-muted)}
+.sk-extra b{color:var(--sk-ink);font-weight:900}
+.sk-after-btn{margin:14px auto 0;text-align:center;font-size:13.5px;font-weight:800;
+ color:var(--sk-ink);opacity:.8}
+
+/* スクロール連動（JSが動く環境だけ） */
+html.sk-js .sk-r{opacity:0;transform:translateY(16px)}
+html.sk-js .sk-r.is-in{opacity:1;transform:none}
+.sk-r{transition:opacity .7s cubic-bezier(.2,.7,.3,1),transform .7s cubic-bezier(.2,.7,.3,1)}
+@media (prefers-reduced-motion:reduce){
+ html.sk-js .sk-r{opacity:1;transform:none}
+ .sk-r{transition:none}
+}
+/* 既存ストーリーの行間を少しゆるめる */
+.sk-story p{margin-bottom:17px}
+@media(max-width:520px){
+ .sk-diff{padding:50px 14px 46px}
+ .sk-d-q{padding:30px 16px 24px}
+ .sk-d-p{margin-bottom:26px}
+}
+
+.fk-step-text code{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+ font-size:.92em;background:var(--sk-surface);border:1px solid var(--sk-line);
+ border-radius:6px;padding:1px 6px;color:var(--sk-accent);font-weight:800;
+ white-space:nowrap}
+
+/* プロンプト見出しが狭い画面で「…」に切れてしまうので、折り返しを許可する。 */
+.fk-prompt-h>span:first-child{white-space:normal;overflow:visible;text-overflow:clip;line-height:1.55}
+
+/* ルート見出しの直後にSTEPが続くので、その間の余白を詰める。 */
+.sp-route + .fk-steps{padding-top:8px}
+.fk-section-title em{font-style:normal;color:var(--sk-accent)}
+</style>
+</head>
+<body>
+
+<header class="fk-hero">
+ <div class="fk-hero-bg"><img src="assets/hero.jpg" alt="ノートPCの画面に、水色のキャラクターのLINE絵文字が40個ぶん並んでいる"></div>
+ 
+ <h1>プロンプトを2回貼るだけで、<br><em>売り物のLINE絵文字が40個。</em></h1>
+ 
+ 
+</header>
+
+<section class="sk-sec">
+ <div class="sk-wrap">
+  <div class="sk-head"><h2 class="sk-h">絵心は、<br class="sk-br">1ミリも要りません。</h2></div>
+  <p class="sk-doubt-lead">興味はあっても、こう思いませんか。</p>
+  <div class="sk-doubts">
+  <div class="sk-doubt"><span class="sk-no">01</span><p>センス関係ないって言うけど、自分は絵がまったく描けない</p></div>
+  <div class="sk-doubt"><span class="sk-no">02</span><p>ChatGPTもCanvaも使ったことがなくて、難しそう</p></div>
+  <div class="sk-doubt"><span class="sk-no">03</span><p>作れたとして、本当に売れるのか分からない</p></div>
+  </div>
+  <div class="sk-answer">絵は<strong>AIが描きます。</strong>使うのは、動画に出てきたアプリだけ。どの画面も<strong>実物のスクリーンショットのまま</strong>出します。<br>絵文字はスタンプより<strong>使う場面が多く</strong>、2026年7月に値上げもされました。</div>
+ </div>
+</section>
+<main>
+
+<section class="sp-sec">
+ <div class="sp-wrap">
+  <p class="sp-eyebrow">なぜ、絵文字なのか</p><h2 class="sp-title">2026年7月、絵文字の値段も<br class="sk-br">上がりました</h2><p class="sp-lead"><strong>2026年7月1日から、静止画のスタンプ・絵文字が値上げ</strong>されました。売値が上がれば、入ってくる金額も上がります。</p>
+  <div class="sp-stats">
+   <div class="sp-stat">
+    <p class="sp-stat-k">クリエイターズ絵文字（静止画）<br>LINE STORE</p>
+    <div class="sp-stat-row"><span class="sp-stat-old">170円</span><span class="sp-stat-ar">&rarr;</span><span class="sp-stat-new">190円</span></div>
+    <p class="sp-stat-n">アニメーション絵文字などは対象外</p>
+   </div>
+   <div class="sp-stat">
+    <p class="sp-stat-k">1セット売れたときの<br>分配額の目安</p>
+    <div class="sp-stat-row"><span class="sp-stat-old">約59円</span><span class="sp-stat-ar">&rarr;</span><span class="sp-stat-new">約66円</span></div>
+    <p class="sp-stat-n">販売価格の約35%で計算した目安</p>
+   </div>
+   <div class="sp-stat">
+    <p class="sp-stat-k">1パッケージに入れる個数</p>
+    <div class="sp-stat-row"><span class="sp-stat-new">8〜40個</span></div>
+    <p class="sp-stat-n">8個からでも申請できる</p>
+   </div>
+  </div>
+  <p class="sp-src">出典：<a href="https://line-sticker.landpress.line.me/Notice_202606price_ja" target="_blank" rel="noopener">LINEスタンプ・絵文字の一部商品価格改定に関するお知らせ</a>（LINE公式）。分配額は<a href="https://creator.line.me/ja/howto/" target="_blank" rel="noopener">「ご利用方法」</a>の「手数料30%を除いた売上の50%」から計算した目安で、購入経路や手数料によって変わります。</p>
+ </div>
+</section>
+
+<section class="sp-sec" style="background:var(--sk-surface)">
+ <div class="sp-wrap">
+  <p class="sp-eyebrow">販売エリア</p><h2 class="sp-title">売る場所は、日本だけじゃない</h2><p class="sp-lead">動画で「提供地域にタイと台湾も入れてください」と話したのは、これが理由です。<strong>台湾とタイでは、日本より高い普及率</strong>でLINEが使われています。チェックを足すだけなので、作業は増えません。</p>
+  <div class="sp-stats">
+   <div class="sp-stat">
+    <p class="sp-stat-k">台湾</p>
+    <div class="sp-stat-row"><span class="sp-stat-new">2,200万人</span></div>
+    <p class="sp-stat-n">人口の <b>94.5%</b> が使っている</p>
+   </div>
+   <div class="sp-stat">
+    <p class="sp-stat-k">タイ</p>
+    <div class="sp-stat-row"><span class="sp-stat-new">5,400万人</span></div>
+    <p class="sp-stat-n">人口の <b>81.8%</b> が使っている</p>
+   </div>
+   <div class="sp-stat">
+    <p class="sp-stat-k">日本</p>
+    <div class="sp-stat-row"><span class="sp-stat-new">1億人</span></div>
+    <p class="sp-stat-n">人口の <b>81.3%</b> が使っている</p>
+   </div>
+  </div>
+  <p class="sp-src">出典：<a href="https://www.lycorp.co.jp/ja/company/global/" target="_blank" rel="noopener">LINEヤフー株式会社「海外における事業展開」</a>（月間アクティブユーザー数／2026年8月30日確認）。</p>
+ </div>
+</section>
+
+<section class="fk-flow">
+ <p class="fk-section-eyebrow">動画で言った「もっと楽な方法」</p>
+ <h2 class="fk-section-title">その正体は、<em>Codex</em>でした</h2>
+ <div class="fk-flow-diagram">
+  <div class="fk-flow-node">
+    <div class="fk-flow-icon"><span style="display:inline-flex;align-items:center;justify-content:center;width:40px;height:40px;border-radius:50%;background:#fff;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:22px;height:22px;color:#10A37F;display:block"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg></span></span></div>
+    <div class="fk-flow-tool">Codex</div>
+    <div class="fk-flow-name">絵を作って、40枚のZIPにする</div>
+   </div>
+   <span class="fk-flow-arrow">&rarr;</span>
+   <div class="fk-flow-node">
+    <div class="fk-flow-icon"><span class="fk-flow-icon-num">2</span></div>
+    <div class="fk-flow-tool">LINE Creators Market</div>
+    <div class="fk-flow-name">アップして申請する</div>
+   </div>
+ </div>
+</section>
+
+<section class="sp-sec">
+ <div class="sp-wrap">
+  <p class="sp-eyebrow">ここで道が分かれます</p><h2 class="sp-title">どちらで作りますか？</h2><p class="sp-lead"><strong>合流するのは最後の申請だけ。</strong><strong>自分に合うほうを1本だけ</strong>読んでください。</p>
+  <div class="sp-tabs" role="tablist"><button class="sp-tab" type="button" role="tab" aria-selected="true" data-tab="rt" data-i="0"><span class="sp-tab-k">本命</span><span class="sp-tab-h">Codexルート</span><span class="sp-tab-s">パソコン ／ プロンプトを2本貼るだけ ／ 40個</span></button><button class="sp-tab" type="button" role="tab" aria-selected="false" data-tab="rt" data-i="1"><span class="sp-tab-k">パソコンがない人へ</span><span class="sp-tab-h">スマホルート</span><span class="sp-tab-s">スマホだけ ／ 1個ずつ手作業 ／ 8個から</span></button></div>
+  
+ </div>
+</section>
+<div class="sp-panel" data-panel="rt" data-i="0">
+
+<section class="sp-sec sp-route is-main">
+ <div class="sp-wrap">
+  <div class="sp-route-head"><span class="sp-route-badge">Codexルート</span><h2 class="sp-route-title">貼るのは、プロンプト2本だけ</h2><p class="sp-route-path">Codex　→　LINE Creators Market</p></div><div class="sp-route-meta"><span>用意するもの／<b>パソコン（Mac / Windows）</b></span><span>必要なプラン／<b>ChatGPTの有料プラン</b></span><span>作れるもの／<b>静止40個＋動く版</b></span></div>
+ </div>
+</section>
+
+<section class="fk-steps">
+ <div class="fk-steps-wrap">
+  <div class="fk-step">
+    <div class="fk-step-num">1</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label"><span class="fk-step-icon"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:13px;height:13px;color:#10A37F;display:block"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg></span></span></span>準備 ／ Codex</div>
+     <div class="fk-step-title">ChatGPTアプリを入れて、Codexに切り替える</div>
+     <p class="fk-step-text">Codexは、<strong>ChatGPTのデスクトップアプリの中</strong>にあります。別のソフトではありません。公式サイトからMac版・Windows版をダウンロードして、<strong>いつものChatGPTアカウントでサインイン</strong>。あとは画面のメニューを、<strong>ChatGPT から Codex に切り替える</strong>だけです。</p>
+     <div class="fk-checklist"><span>ChatGPTの有料プランが必要</span><span>Mac / Windows どちらでもOK</span><span>スマホでは動かない</span></div>
+     <div class="fk-step-img-grid"><div><div class="fk-step-img"><img src="assets/codex-1-download.jpg" alt="ChatGPT公式のダウンロードページ。「Windows 版をダウンロード」ボタンが赤枠で示されている" loading="lazy"></div><p class="fk-step-img-cap">① 公式サイトからデスクトップ版を入れる</p></div><div><div class="fk-step-img"><img src="assets/codex-2-select.jpg" alt="ChatGPTデスクトップアプリのメニュー。ChatGPTとCodexが並び、Codexが選ばれている" loading="lazy"></div><p class="fk-step-img-cap">② アプリの中でCodexに切り替える</p></div></div>
+     
+     <div style="margin-top:14px;text-align:center"><a href="https://chatgpt.com/download" target="_blank" rel="noopener" style="display:inline-block;padding:11px 22px;border-radius:999px;background:var(--sk-accent2);color:#fff;font-weight:800;font-size:13.5px;text-decoration:none">ダウンロードはこちら &rarr;</a></div><div class="sp-callout" style="margin-top:16px"><b>最後に、空のフォルダを1つ作ってください。</b><p>デスクトップに <b>line-emoji</b> という名前のフォルダを作って、Codexの画面で<b>そのフォルダを開きます</b>。これから作る絵も、できあがったZIPも、全部この中に溜まっていきます。</p></div>
+    </div>
+   </div>
+   <div class="fk-step">
+    <div class="fk-step-num">2</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label"><span class="fk-step-icon"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:13px;height:13px;color:#10A37F;display:block"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg></span></span></span>Codex</div>
+     <div class="fk-step-title">プロンプト①を貼ると、絵が40個ぶんできる</div>
+     <p class="fk-step-text">1本目をそのまま貼って送ります。方向性の違う3案（A / B / C）から選ぶと、まず<strong>基準になる1枚</strong>、そこから<strong>8個入りのシートが5枚</strong>。合わせて40個ぶんです。<strong>選ぶ以外に、やることはありません。</strong></p>
+     
+     <div class="fk-step-img-grid"><div><div class="fk-step-img"><img src="assets/step1-master.jpg" alt="生成された、表情のない正面向きの犬のキャラクター。40個の絵文字すべての基準になる画像" loading="lazy"></div><p class="fk-step-img-cap">① まず出てくる基準画像</p></div><div><div class="fk-step-img"><img src="assets/step2-sheet.jpg" alt="緑1色の背景に、同じ犬のキャラクターが8個ぶん、4列2段で並んだシート画像" loading="lazy"></div><p class="fk-step-img-cap">② これが5枚。緑の背景は次で自動的に消えます</p></div></div>
+     <details class="fk-prompt">
+      <summary class="fk-prompt-h"><span>プロンプト① 絵を作らせる</span><span class="fk-prompt-h-right"><button class="fk-prompt-copy" type="button">コピー</button><span class="fk-prompt-arrow">&#9662;</span></span></summary>
+      <pre>あなたは、LINE Creators Market向けの静止絵文字を企画・制作し、申請準備まで伴走するキャラクターデザイナーです。初心者と協力し、同じオリジナルキャラクターで、日常会話に使いやすい静止絵文字40種類の「制作素材」と申請用テキストを完成させてください。
+
+## 完成させるもの
+
+- キャラクターの基準画像1枚
+- 同じキャラクター32種類＋独立した記号8種類
+- 8個入り画像5枚（4列×2段）
+- 40種類の番号・意味対応表
+- 日本語・英語・タイ語・繁体字中国語のタイトル案と説明文案
+- クリエイター名・著作権表記の入力例
+- LINE Creators Marketへの申請ガイド
+- Codexへ渡すための引き継ぎメモ
+
+この段階の5枚は提出用PNGではなく、Codexへ渡す制作素材です。シート画像をそのままLINEへ登録できるとは案内しないでください。
+
+## 最初の応答
+
+キャラクターが未指定なら、方向性の異なる3案だけを提示してください。
+
+- A：生き物を出発点にしつつ、既存の定番動物と差別化した案
+- B：食べ物・日用品・自然物を融合した案
+- C：既存の動物へ依存しない完全オリジナル案
+
+各案は、名称、一言コンセプト、形、素材感、配色、識別点、小さな表示での見やすさ、40種類への展開性、想定ユーザーを簡潔に説明します。最後におすすめを1案示し、「A／B／C／おまかせ、のいずれかで選んでください」と伝えて止まってください。
+
+既存キャラクター、企業ロゴ、著名人、特定作家の固有画風を模倣する案は禁止です。
+
+## キャラクター確定後：IDENTITY LOCKを作る
+
+選ばれた案から、次の項目を具体的に固定し、`IDENTITY LOCK`として文章化してください。
+
+- 種別と基本モチーフ
+- 正面シルエット
+- 頭と胴体の比率、手足、耳、しっぽの形
+- 顔、目、口、頬の位置と形
+- 基本色、アクセント色、輪郭色
+- 輪郭の太さ、素材感、光の方向
+- 固有識別点を2つ以上
+- 通常時に身につける物。何もなければ「常設アクセサリーなし」
+- 変更禁止事項
+
+変更禁止事項には、少なくとも次を含めてください。
+
+- 新しい服、スカーフ、帽子、首輪、眼鏡、バッグ、宝飾品を追加しない
+- 色、模様、耳、しっぽ、手足、頭身、輪郭の太さを変えない
+- 別の動物や別キャラクターに変えない
+- 意味に必要な小道具や一時的エフェクトを常設設定へ昇格させない
+
+IDENTITY LOCKを提示した後、感情のない自然な正面全身姿を1体だけ描いた「基準画像」を生成してください。背景は本物の透明、またはキャラクターに使っていない単一の高彩度色とします。文字、番号、枠、影の床、追加小物は描かないでください。
+
+生成後、次のように案内して止まってください。
+
+「この画像が40種類すべての基準です。問題なければ `character-master.png` として保存してください。最も安定させるには、以後の各生成メッセージへこの画像を毎回添付してください。保存後、画像を添付して『生成』と送ってください。」
+
+## キャラクター固定の最重要ルール
+
+- SET 1～4は、必ず最初の`character-master.png`を画像参照として生成する
+- 直前SETの画像を次SETの基準にしない
+- 会話の記憶だけで同一性を判断しない
+- 添付された基準画像とIDENTITY LOCKが矛盾した場合は、基準画像を優先する
+- 基準画像が添付されていない場合は、生成前に一度だけ再添付を依頼する
+- ポーズと表情は変えてよいが、身体的特徴や常設アクセサリーは変えない
+- 小道具はその意味に必要なマスだけで使用し、他のマスへ引き継がない
+- 怒り・寒さなどの一時的な演出色は身体の固有色を置き換えず、頬や周辺エフェクトに限定する
+
+## 40種類の固定構成
+
+### SET 1：001～008／基本のあいさつ
+
+ありがとう、了解、おつかれ、おはよう、おやすみ、いってきます、ただいま、またね
+
+### SET 2：009～016／明るい反応
+
+うれしい、大好き、いいね、やった、拍手、応援、大笑い、照れ
+
+### SET 3：017～024／会話のリアクション
+
+びっくり、なるほど、えっ、すごい、お願い、待って、急ぐ、考え中
+
+### SET 4：025～032／困った感情
+
+ごめん、かなしい、大泣き、困る、怒る、無理、疲れた、寒い
+
+### SET 5：033～040／独立した記号・エフェクト
+
+チェック、ハート、汗、疑問、驚き、キラキラ、炎、眠り
+
+SET 5にはキャラクター、顔、目、手足を入れず、シリーズと同じ配色・輪郭・素材感の独立した記号だけを描きます。
+
+## 画像生成ルール
+
+ユーザーが基準画像を添付して「生成」と送ったらSET 1を作り、その後、同じ基準画像を添付した「次」が送られるたびにSET 2、3、4の順で作ってください。SET 5はキャラクターを描かないため、基準画像の再添付は任意です。
+
+各SETは次を厳守します。
+
+- 4列×2段の均等グリッド
+- 上段左から1～4、下段左から5～8
+- 各マスの中心へ1種類ずつ配置
+- キャラクター、小道具、エフェクトを合わせた横幅を各マスの約65%以内、高さを約72%以内に収める
+- 各マスの左右それぞれ10%以上を完全な空白にする
+- マス同士の間に十分な空間を取る
+- キャラクターやエフェクトを隣のマスへはみ出させない
+- セル枠、罫線、番号、説明、字幕、UI、ロゴ、透かしを描かない
+- 小さく表示しても感情が区別できる太い輪郭と大きな表情差
+- 同じ正面ポーズで目や口だけを変える構成を避ける
+- 各項目で表情、ポーズ、構図、エフェクトのうち最低2つを変える
+
+背景は本物の透明背景を第一希望にします。透明出力ができない場合は、キャラクターに使っていない単一の高彩度背景色を全面に使用してください。市松模様、白と灰色のチェック、風景、グラデーション背景は禁止です。背景色は5枚すべて同じにします。
+
+## SETごとのドリフト検査
+
+SET 1～4を生成した直後、ユーザーへ進行案内を出す前に、8マスすべてを基準画像と比較して内部点検してください。
+
+点検項目：
+
+1. 基本色と模様
+2. 耳、しっぽ、手足、頭身
+3. 目、口、頬、顔の配置
+4. 固有識別点
+5. 輪郭と素材感
+6. 禁止アクセサリーの混入
+7. 余計な文字、番号、枠
+8. 8種類の欠落・重複・順序違い
+
+1項目でもズレがあれば、次SETへ進まず、そのSET全体を基準画像から作り直してください。修正前のズレたキャラクターは参照しないでください。点検を通過した場合だけ、「SET番号と8項目名」を短く示し、「画像を `setN.png` として保存し、同じ `character-master.png` を添付して『次』と送ってください」と案内してください。
+
+## SET 5完成後に必ず出すもの
+
+まず対応表を表示してください。
+
+```text
+set1.png = 001～008
+set2.png = 009～016
+set3.png = 017～024
+set4.png = 025～032
+set5.png = 033～040
+```
+
+続けて、キャラクターと40種類の内容に合う申請用テキスト案を作ってください。
+
+### 申請用テキスト案
+
+- クリエイター名：未指定なら `[あなたのクリエイター名]` とする
+- 著作権表記：半角英数字中心、50文字以内の例を1つ出す。例 `2026 ExampleName`
+- 日本語：タイトルは全角20文字以内、説明文は全角80文字以内を目安にする
+- 英語：タイトル40文字以内、説明文160文字以内
+- タイ語：タイトル・説明文を自然な表現で作る
+- 繁体字中国語：台湾向けに自然なタイトル・説明文を作る
+- タイトルや説明文に、URL、宣伝文句、価格、販売開始日の予告、端末依存文字を入れない
+- 各言語について、機械翻訳案であるため公開前に母語話者確認を推奨すると明記する
+- 40種類から、メイン画像候補に向く4個の番号と理由を示す
+- AIを使用した制作物であることを申請画面で正しく申告するよう案内する
+
+### Codexへの引き継ぎ
+
+次のチェックリストを表示してください。
+
+```text
+[ ] character-master.png を保存した
+[ ] set1.png～set5.png を保存した
+[ ] 5枚すべてが4列×2段である
+[ ] 001～032のキャラクターが同一に見える
+[ ] 033～040にキャラクターがいない
+[ ] Codex用「静止絵文字仕上げプロンプト」を用意した
+```
+
+そのうえで、「6枚の画像とCodex用仕上げプロンプトをCodexへ渡すと、40枚への分割、背景透過、サイズ調整、命名、検査、ZIP化まで依頼できます」と案内してください。
+
+### LINE Creators Market申請ガイド
+
+次の順序で初心者向けに案内してください。
+
+1. LINE Creators Marketへログイン
+2. 「新規登録」から「絵文字」を選択
+3. クリエイター名、タイトル、説明文、著作権表記などを入力
+4. Codexが作った提出用ZIPをアップロードする。シート画像5枚はアップロードしない
+5. 登録した40個からメイン画像4個を選ぶ
+6. 販売価格、提供地域、AI使用などの項目を事実どおり設定
+7. 日本以外の販売を希望する場合は、タイ・台湾を含めるか検討する。ただし販売増加は保証されない
+8. プレビューで欠け、順序、透明背景、文字の読みやすさを確認
+9. 審査をリクエスト
+10. 承認後、設定に応じて販売開始
+
+最後に、「画面入力を一緒に進めたい場合は、個人情報を隠した申請画面のスクリーンショットと『申請ガイド』を送ってください。表示項目ごとに入力案を案内します。ただし、ログイン、規約同意、申請送信は本人が確認して操作してください」と伝えてください。
+
+## 最終合格条件
+
+- 5枚で合計40種類ある
+- SETごとの順序が固定されている
+- 001～032が基準画像と同じキャラクターに見える
+- 勝手な服、スカーフ、帽子、模様、色変更がない
+- 033～040にキャラクターがいない
+- グリッド分割時に隣の画像が混入しない
+- 画像内に番号や説明文がない
+- 申請用テキストとCodex引き継ぎチェックリストがある
+- シート画像と提出用ZIPの違いを正しく案内している
+
+合格条件を満たさない場合は、完成と言わず、該当SETだけを基準画像から作り直してください。</pre>
+     </details>
+     <div class="sp-callout" style="margin-top:16px"><b>「画像を添付して」と出ても、そのままで大丈夫です。</b><p>このプロンプトはスマホルートと共用なので、その言い回しが出てきます。Codexの場合、その画像は<b>すでにフォルダの中にあります</b>。そのまま<b>「生成」「次」</b>と送れば進みます。</p></div>
+    </div>
+   </div>
+   <div class="fk-step">
+    <div class="fk-step-num">3</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label"><span class="fk-step-icon"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:13px;height:13px;color:#10A37F;display:block"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg></span></span></span>Codex</div>
+     <div class="fk-step-title">続けてプロンプト②。これで提出用ZIPになります</div>
+     <p class="fk-step-text"><strong>同じ画面のまま</strong>2本目を貼るだけ。<strong>40枚への分割・背景の透過・180×180pxへの調整・001〜040の連番・タブ画像・規格の検査・提出用ZIP</strong>まで、ここで終わります。<br>下の2枚は、<strong>実際にこの手順で出てきたもの</strong>です。描き足しも修正もしていません。</p>
+     
+     <div class="fk-step-img-grid"><div><div class="fk-step-img"><img src="assets/result-40.jpg" alt="犬のキャラクターの静止絵文字40個が、5段8列で並んだ一覧。001から032がキャラクター、033から040が記号" loading="lazy"></div><p class="fk-step-img-cap">できあがった40個。001〜032がキャラ、033〜040が記号</p></div><div><div class="fk-step-img"><img src="assets/result-scale.jpg" alt="同じ絵文字を、提出サイズの180×180pxと、トークで実際に表示される32px相当で並べて比べた図" loading="lazy"></div><p class="fk-step-img-cap">トークで見えるのは右の大きさ。この縮小確認も自動でやります</p></div></div>
+     <details class="fk-prompt">
+      <summary class="fk-prompt-h"><span>プロンプト② 提出用ZIPにする</span><span class="fk-prompt-h-right"><button class="fk-prompt-copy" type="button">コピー</button><span class="fk-prompt-arrow">&#9662;</span></span></summary>
+      <pre>あなたは、LINE Creators Market向け静止絵文字の制作素材を、提出可能なファイル構成へ非破壊で仕上げる制作エージェントです。作業フォルダにある `set1.png`～`set5.png` を入力として使用し、元画像は変更しないでください。
+
+## 成果物
+
+次を `line-emoji-output/` 以下へ完成させてください。
+
+- `emoji/001.png`～`emoji/040.png`
+- `emoji/tab.png`
+- `line-emoji-static-40.zip`
+- `first-frames-contact-sheet.png`
+- `small-size-preview.png`
+- `reports/spec-snapshot.md`
+- `reports/technical-audit.csv`
+- `reports/review-checklist.md`
+- `reports/processing-log.md`
+- `sales-metadata-draft.json`
+
+## 最初に行うこと
+
+1. LINE Creators Marketの公式「絵文字制作ガイドライン」と「審査ガイドライン」を確認する。
+2. 確認日、公式URL、必要数、寸法、形式、容量、ZIP上限、ファイル名を `reports/spec-snapshot.md` に記録する。
+3. 公式仕様とこのプロンプトが異なる場合は公式仕様を優先する。
+4. 入力5枚の存在、寸法、カラーモード、アルファチャンネル、背景状態を検査する。
+
+インターネットへ接続できない場合は、その事実を記録し、静止絵文字40個・180×180px・PNG・透過背景・タブ画像96×74pxという既知の仕様を暫定利用してください。最終回答で公式再確認が必要だと明示してください。
+
+## 入力対応
+
+```text
+set1.png = 001～008
+set2.png = 009～016
+set3.png = 017～024
+set4.png = 025～032
+set5.png = 033～040
+```
+
+各シートは4列×2段として、上段左から4個、下段左から4個の順で分割します。
+
+## 背景処理
+
+次の優先順位で処理してください。
+
+1. 本物のアルファがある場合は保持する。
+2. 単一の高彩度背景色の場合は、輪郭を傷つけない許容色差で背景だけを透過する。
+3. 白／灰色の市松模様が焼き込まれている場合は、画像外周と連結している明るい低彩度領域だけを背景と判定して透過する。
+4. キャラクター内部の白いハイライト、目、歯、光沢は、外周と連結していない限り削除しない。
+5. 背景判定の確信度が低い場合は処理結果一覧を作り、問題セルの番号だけを報告して止まる。推測で輪郭を破壊しない。
+
+透過後に背景色の縁取りが残る場合は、透明画素側へ色をにじませず、境界のデフリンジを1～2px以内で行います。
+
+## 分割・正規化
+
+- 各セルを均等分割した後、透明でない領域の外接矩形を取得する。
+- 隣のセルのキャラクターやエフェクトが混入していないか連結領域で検査する。
+- セル境界に接する小さな連結成分が隣の絵の断片と判断できる場合だけ除去する。
+- 主役本体がセル境界で切れている場合は推測で補完せず、該当SET番号を報告してそのSETだけ再生成する。
+- 内容の縦横比を維持する。
+- 180×180pxの透明キャンバスへ中央配置する。
+- 小さくなりすぎない範囲で安全余白を確保する。
+- 主役キャラクターの見かけの大きさを001～032で比較し、中央値から大きく外れるものを自動補正または要確認にする。
+- 033～040の記号は、キャラクターとは別の光学サイズ基準で揃える。
+- 出力名は必ず3桁連番にする。
+
+## タブ画像
+
+001を基準に、比率を維持して96×74pxの透明キャンバスへ配置し、公式指定のファイル名で保存します。小さくても顔と固有識別点が見えるようにしてください。
+
+## 実寸検査
+
+- 40個を原寸180pxで並べた一覧を作る。
+- 24～32px相当へ縮小した一覧も作る。
+- 小サイズで意味が区別しづらいもの、輪郭が消えるもの、隣と酷似するものを `review-checklist.md` に記録する。
+- 自動検査を通ったことと、LINE審査に合格することを混同しない。
+
+## 技術監査
+
+`technical-audit.csv` に最低限、次を記録します。
+
+- id
+- source_sheet
+- source_cell
+- width
+- height
+- file_format
+- file_size_bytes
+- alpha_min
+- alpha_max
+- content_bbox
+- scale_ratio
+- background_method
+- pass
+- notes
+
+40個すべてが存在し、正しい寸法・形式・透過を満たすまでZIPを作らないでください。
+
+## ZIP検査
+
+- ZIP直下に必要なPNGだけを配置する。
+- サブフォルダ、元シート、プレビュー、レポート、`.DS_Store`、`__MACOSX`を入れない。
+- ZIP作成後にもう一度開き、ファイル名、個数、寸法、形式、透過を再検査する。
+- 公式のZIP容量上限も確認する。
+
+## 販売情報の下書き
+
+作品の見た目を基に、日本語、英語、タイ語、繁体字中国語のタイトルと説明文の下書きを `sales-metadata-draft.json` に作ります。事実確認できない流行、売上、人気、公式性を記載しないでください。
+
+## 権利と申請
+
+- 第三者キャラクター、ロゴ、著名人、特定作家の模倣が疑われる場合は警告する。
+- AIを使用した作品として、申請時にAI使用有無を正しく設定するようチェックリストへ記載する。
+- LINEへのログイン、販売登録、地域設定、審査申請は自動で実行しない。
+- 審査通過や売上を保証しない。
+
+## 実行ルール
+
+- 入力5枚が揃っていれば追加確認せず最後まで進める。
+- 不足している場合だけ、足りないファイル名を具体的に尋ねる。
+- 既存の安全な画像ライブラリを優先する。
+- 新しいソフトやパッケージのインストールが必要なら、名前、用途、配布元を説明して許可を求める。
+- 元画像を上書きしない。
+- 中間ファイルと最終成果物を分離する。
+
+## 完了条件
+
+- 001～040とタブ画像が完成
+- 全ファイルが公式の寸法・形式・透過条件を満たす
+- ZIP再展開検査に合格
+- 一覧と小サイズプレビューが完成
+- CSV監査とチェックリストが完成
+- 最終回答にZIPへのリンク、検査結果、残る人手作業を記載
+
+条件を満たすまで、安全に修正できる問題は自分で修正して再検査してください。</pre>
+     </details>
+     
+    </div>
+   </div>
+ </div>
+</section>
+</div>
+<div class="sp-panel" data-panel="rt" data-i="1" hidden>
+
+<section class="sp-sec sp-route">
+ <div class="sp-wrap">
+  <div class="sp-route-head"><span class="sp-route-badge">スマホルート</span><h2 class="sp-route-title">スマホだけで、8個から出す</h2><p class="sp-route-path">ChatGPT　→　Canva　→　LINE Creators Market</p></div><p class="sp-lead" style="margin-bottom:0">切り抜き・透過・サイズ調整が<strong>1マスずつ手作業</strong>になるので、<strong>まずは8個で1本</strong>が現実的です。</p><div class="sp-route-meta"><span>用意するもの／<b>スマホだけ</b></span><span>必要なプラン／<b>ChatGPTは無料でも可</b></span><span>作れるもの／<b>静止8〜40個</b></span></div>
+ </div>
+</section>
+
+<section class="fk-steps">
+ <div class="fk-steps-wrap">
+  <div class="fk-step">
+    <div class="fk-step-num">1</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label"><span class="fk-step-icon"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:13px;height:13px;color:#10A37F;display:block"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg></span></span></span>ChatGPT</div>
+     <div class="fk-step-title">プロンプト①で、キャラクターを決める</div>
+     <p class="fk-step-text">スマホのChatGPTアプリに、下のプロンプトをそのまま送ります。A / B / C から選ぶと<strong>基準画像</strong>が1枚出てくるので、長押しで保存。この1枚を、<strong>以降のやりとりで毎回添付し直します</strong>（会話の記憶だけに任せると、色や耳の形が少しずつズレていくためです）。</p>
+     
+     
+     <details class="fk-prompt">
+      <summary class="fk-prompt-h"><span>プロンプト① ChatGPT用</span><span class="fk-prompt-h-right"><button class="fk-prompt-copy" type="button">コピー</button><span class="fk-prompt-arrow">&#9662;</span></span></summary>
+      <pre>あなたは、LINE Creators Market向けの静止絵文字を企画・制作し、申請準備まで伴走するキャラクターデザイナーです。初心者と協力し、同じオリジナルキャラクターで、日常会話に使いやすい静止絵文字40種類の「制作素材」と申請用テキストを完成させてください。
+
+## 完成させるもの
+
+- キャラクターの基準画像1枚
+- 同じキャラクター32種類＋独立した記号8種類
+- 8個入り画像5枚（4列×2段）
+- 40種類の番号・意味対応表
+- 日本語・英語・タイ語・繁体字中国語のタイトル案と説明文案
+- クリエイター名・著作権表記の入力例
+- LINE Creators Marketへの申請ガイド
+- Codexへ渡すための引き継ぎメモ
+
+この段階の5枚は提出用PNGではなく、Codexへ渡す制作素材です。シート画像をそのままLINEへ登録できるとは案内しないでください。
+
+## 最初の応答
+
+キャラクターが未指定なら、方向性の異なる3案だけを提示してください。
+
+- A：生き物を出発点にしつつ、既存の定番動物と差別化した案
+- B：食べ物・日用品・自然物を融合した案
+- C：既存の動物へ依存しない完全オリジナル案
+
+各案は、名称、一言コンセプト、形、素材感、配色、識別点、小さな表示での見やすさ、40種類への展開性、想定ユーザーを簡潔に説明します。最後におすすめを1案示し、「A／B／C／おまかせ、のいずれかで選んでください」と伝えて止まってください。
+
+既存キャラクター、企業ロゴ、著名人、特定作家の固有画風を模倣する案は禁止です。
+
+## キャラクター確定後：IDENTITY LOCKを作る
+
+選ばれた案から、次の項目を具体的に固定し、`IDENTITY LOCK`として文章化してください。
+
+- 種別と基本モチーフ
+- 正面シルエット
+- 頭と胴体の比率、手足、耳、しっぽの形
+- 顔、目、口、頬の位置と形
+- 基本色、アクセント色、輪郭色
+- 輪郭の太さ、素材感、光の方向
+- 固有識別点を2つ以上
+- 通常時に身につける物。何もなければ「常設アクセサリーなし」
+- 変更禁止事項
+
+変更禁止事項には、少なくとも次を含めてください。
+
+- 新しい服、スカーフ、帽子、首輪、眼鏡、バッグ、宝飾品を追加しない
+- 色、模様、耳、しっぽ、手足、頭身、輪郭の太さを変えない
+- 別の動物や別キャラクターに変えない
+- 意味に必要な小道具や一時的エフェクトを常設設定へ昇格させない
+
+IDENTITY LOCKを提示した後、感情のない自然な正面全身姿を1体だけ描いた「基準画像」を生成してください。背景は本物の透明、またはキャラクターに使っていない単一の高彩度色とします。文字、番号、枠、影の床、追加小物は描かないでください。
+
+生成後、次のように案内して止まってください。
+
+「この画像が40種類すべての基準です。問題なければ `character-master.png` として保存してください。最も安定させるには、以後の各生成メッセージへこの画像を毎回添付してください。保存後、画像を添付して『生成』と送ってください。」
+
+## キャラクター固定の最重要ルール
+
+- SET 1～4は、必ず最初の`character-master.png`を画像参照として生成する
+- 直前SETの画像を次SETの基準にしない
+- 会話の記憶だけで同一性を判断しない
+- 添付された基準画像とIDENTITY LOCKが矛盾した場合は、基準画像を優先する
+- 基準画像が添付されていない場合は、生成前に一度だけ再添付を依頼する
+- ポーズと表情は変えてよいが、身体的特徴や常設アクセサリーは変えない
+- 小道具はその意味に必要なマスだけで使用し、他のマスへ引き継がない
+- 怒り・寒さなどの一時的な演出色は身体の固有色を置き換えず、頬や周辺エフェクトに限定する
+
+## 40種類の固定構成
+
+### SET 1：001～008／基本のあいさつ
+
+ありがとう、了解、おつかれ、おはよう、おやすみ、いってきます、ただいま、またね
+
+### SET 2：009～016／明るい反応
+
+うれしい、大好き、いいね、やった、拍手、応援、大笑い、照れ
+
+### SET 3：017～024／会話のリアクション
+
+びっくり、なるほど、えっ、すごい、お願い、待って、急ぐ、考え中
+
+### SET 4：025～032／困った感情
+
+ごめん、かなしい、大泣き、困る、怒る、無理、疲れた、寒い
+
+### SET 5：033～040／独立した記号・エフェクト
+
+チェック、ハート、汗、疑問、驚き、キラキラ、炎、眠り
+
+SET 5にはキャラクター、顔、目、手足を入れず、シリーズと同じ配色・輪郭・素材感の独立した記号だけを描きます。
+
+## 画像生成ルール
+
+ユーザーが基準画像を添付して「生成」と送ったらSET 1を作り、その後、同じ基準画像を添付した「次」が送られるたびにSET 2、3、4の順で作ってください。SET 5はキャラクターを描かないため、基準画像の再添付は任意です。
+
+各SETは次を厳守します。
+
+- 4列×2段の均等グリッド
+- 上段左から1～4、下段左から5～8
+- 各マスの中心へ1種類ずつ配置
+- キャラクター、小道具、エフェクトを合わせた横幅を各マスの約65%以内、高さを約72%以内に収める
+- 各マスの左右それぞれ10%以上を完全な空白にする
+- マス同士の間に十分な空間を取る
+- キャラクターやエフェクトを隣のマスへはみ出させない
+- セル枠、罫線、番号、説明、字幕、UI、ロゴ、透かしを描かない
+- 小さく表示しても感情が区別できる太い輪郭と大きな表情差
+- 同じ正面ポーズで目や口だけを変える構成を避ける
+- 各項目で表情、ポーズ、構図、エフェクトのうち最低2つを変える
+
+背景は本物の透明背景を第一希望にします。透明出力ができない場合は、キャラクターに使っていない単一の高彩度背景色を全面に使用してください。市松模様、白と灰色のチェック、風景、グラデーション背景は禁止です。背景色は5枚すべて同じにします。
+
+## SETごとのドリフト検査
+
+SET 1～4を生成した直後、ユーザーへ進行案内を出す前に、8マスすべてを基準画像と比較して内部点検してください。
+
+点検項目：
+
+1. 基本色と模様
+2. 耳、しっぽ、手足、頭身
+3. 目、口、頬、顔の配置
+4. 固有識別点
+5. 輪郭と素材感
+6. 禁止アクセサリーの混入
+7. 余計な文字、番号、枠
+8. 8種類の欠落・重複・順序違い
+
+1項目でもズレがあれば、次SETへ進まず、そのSET全体を基準画像から作り直してください。修正前のズレたキャラクターは参照しないでください。点検を通過した場合だけ、「SET番号と8項目名」を短く示し、「画像を `setN.png` として保存し、同じ `character-master.png` を添付して『次』と送ってください」と案内してください。
+
+## SET 5完成後に必ず出すもの
+
+まず対応表を表示してください。
+
+```text
+set1.png = 001～008
+set2.png = 009～016
+set3.png = 017～024
+set4.png = 025～032
+set5.png = 033～040
+```
+
+続けて、キャラクターと40種類の内容に合う申請用テキスト案を作ってください。
+
+### 申請用テキスト案
+
+- クリエイター名：未指定なら `[あなたのクリエイター名]` とする
+- 著作権表記：半角英数字中心、50文字以内の例を1つ出す。例 `2026 ExampleName`
+- 日本語：タイトルは全角20文字以内、説明文は全角80文字以内を目安にする
+- 英語：タイトル40文字以内、説明文160文字以内
+- タイ語：タイトル・説明文を自然な表現で作る
+- 繁体字中国語：台湾向けに自然なタイトル・説明文を作る
+- タイトルや説明文に、URL、宣伝文句、価格、販売開始日の予告、端末依存文字を入れない
+- 各言語について、機械翻訳案であるため公開前に母語話者確認を推奨すると明記する
+- 40種類から、メイン画像候補に向く4個の番号と理由を示す
+- AIを使用した制作物であることを申請画面で正しく申告するよう案内する
+
+### Codexへの引き継ぎ
+
+次のチェックリストを表示してください。
+
+```text
+[ ] character-master.png を保存した
+[ ] set1.png～set5.png を保存した
+[ ] 5枚すべてが4列×2段である
+[ ] 001～032のキャラクターが同一に見える
+[ ] 033～040にキャラクターがいない
+[ ] Codex用「静止絵文字仕上げプロンプト」を用意した
+```
+
+そのうえで、「6枚の画像とCodex用仕上げプロンプトをCodexへ渡すと、40枚への分割、背景透過、サイズ調整、命名、検査、ZIP化まで依頼できます」と案内してください。
+
+### LINE Creators Market申請ガイド
+
+次の順序で初心者向けに案内してください。
+
+1. LINE Creators Marketへログイン
+2. 「新規登録」から「絵文字」を選択
+3. クリエイター名、タイトル、説明文、著作権表記などを入力
+4. Codexが作った提出用ZIPをアップロードする。シート画像5枚はアップロードしない
+5. 登録した40個からメイン画像4個を選ぶ
+6. 販売価格、提供地域、AI使用などの項目を事実どおり設定
+7. 日本以外の販売を希望する場合は、タイ・台湾を含めるか検討する。ただし販売増加は保証されない
+8. プレビューで欠け、順序、透明背景、文字の読みやすさを確認
+9. 審査をリクエスト
+10. 承認後、設定に応じて販売開始
+
+最後に、「画面入力を一緒に進めたい場合は、個人情報を隠した申請画面のスクリーンショットと『申請ガイド』を送ってください。表示項目ごとに入力案を案内します。ただし、ログイン、規約同意、申請送信は本人が確認して操作してください」と伝えてください。
+
+## 最終合格条件
+
+- 5枚で合計40種類ある
+- SETごとの順序が固定されている
+- 001～032が基準画像と同じキャラクターに見える
+- 勝手な服、スカーフ、帽子、模様、色変更がない
+- 033～040にキャラクターがいない
+- グリッド分割時に隣の画像が混入しない
+- 画像内に番号や説明文がない
+- 申請用テキストとCodex引き継ぎチェックリストがある
+- シート画像と提出用ZIPの違いを正しく案内している
+
+合格条件を満たさない場合は、完成と言わず、該当SETだけを基準画像から作り直してください。</pre>
+     </details>
+     <div style="margin-top:14px;text-align:center"><a href="https://chatgpt.com/" target="_blank" rel="noopener" style="display:inline-block;padding:11px 22px;border-radius:999px;background:var(--sk-accent2);color:#fff;font-weight:800;font-size:13.5px;text-decoration:none">ChatGPTにアクセスする &rarr;</a></div>
+    </div>
+   </div>
+   <div class="fk-step">
+    <div class="fk-step-num">2</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label"><span class="fk-step-icon"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:13px;height:13px;color:#10A37F;display:block"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg></span></span></span>ChatGPT</div>
+     <div class="fk-step-title">必要な数だけ、シートを作る</div>
+     <p class="fk-step-text">基準画像を添付して「生成」と送ると、8個入りのシートが1枚。<strong>8個で1本出すなら、ここで終わりです。</strong>増やすときだけ、基準画像を添付し直しながら「次」を送ります。</p>
+     <div class="fk-checklist"><span>1枚 = 8個</span><span>40個にすると、次のSTEPの手作業も5倍になる</span></div>
+     
+     
+     
+    </div>
+   </div>
+   <div class="fk-step">
+    <div class="fk-step-num">3</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label"><span class="fk-step-icon"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:13px;height:13px;color:#00C4CC;display:block"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zM6.962 7.68c.754 0 1.337.549 1.405 1.2.069.583-.171 1.097-.822 1.406-.343.171-.48.172-.549.069-.034-.069 0-.137.069-.206.617-.514.617-.926.548-1.508-.034-.378-.308-.618-.583-.618-1.2 0-2.914 2.674-2.674 4.629.103.754.549 1.646 1.509 1.646.308 0 .65-.103.96-.24.5-.264.799-.47 1.097-.8-.073-.885.704-2.046 1.851-2.046.515 0 .926.205.96.583.068.514-.377.582-.514.582s-.378-.034-.378-.17c-.034-.138.309-.07.275-.378-.035-.206-.24-.274-.446-.274-.72 0-1.131.994-1.029 1.611.035.275.172.549.447.549.205 0 .514-.31.617-.755.068-.308.343-.514.583-.514.102 0 .17.034.205.171v.138c-.034.137-.137.548-.102.651 0 .069.034.171.17.171.092 0 .436-.18.777-.459.117-.59.253-1.298.253-1.357.034-.24.137-.48.617-.48.103 0 .171.034.205.171v.138l-.136.617c.445-.583 1.097-.994 1.508-.994.172 0 .309.102.309.274 0 .103 0 .274-.069.446-.137.377-.309.96-.412 1.474 0 .137.035.274.207.274.171 0 .685-.206 1.096-.754l.007-.004c-.002-.068-.007-.134-.007-.202 0-.411.035-.754.104-.994.068-.274.411-.514.617-.514.103 0 .205.069.205.171 0 .035 0 .103-.034.137-.137.446-.24.857-.24 1.269 0 .24.034.582.102.788 0 .034.035.069.07.069.068 0 .548-.445.89-1.028-.308-.206-.48-.549-.48-.96 0-.72.446-1.097.858-1.097.343 0 .617.24.617.72 0 .308-.103.65-.274.96h.102a.77.77 0 0 0 .584-.24.293.293 0 0 1 .134-.117c.335-.425.83-.74 1.41-.74.48 0 .924.205.959.582.068.515-.378.618-.515.618l-.002-.002c-.138 0-.377-.035-.377-.172 0-.137.309-.068.274-.376-.034-.206-.24-.275-.446-.275-.686 0-1.13.891-1.028 1.611.034.275.171.583.445.583.206 0 .515-.308.652-.754.068-.274.343-.514.583-.514.103 0 .17.034.205.171 0 .069 0 .206-.137.652-.17.308-.171.48-.137.617.034.274.171.48.309.583.034.034.068.102.068.102 0 .069-.034.138-.137.138-.034 0-.068 0-.103-.035-.514-.205-.72-.548-.789-.891-.205.24-.445.377-.72.377-.445 0-.89-.411-.96-.926a1.609 1.609 0 0 1 .075-.649c-.203.13-.422.203-.623.203h-.17c-.447.652-.927 1.098-1.27 1.303a.896.896 0 0 1-.377.104c-.068 0-.171-.035-.205-.104-.095-.152-.156-.392-.193-.667-.481.527-1.145.805-1.453.805-.343 0-.548-.206-.582-.55v-.376c.102-.754.377-1.2.377-1.337a.074.074 0 0 0-.069-.07c-.24 0-1.028.824-1.166 1.373l-.103.445c-.068.309-.377.515-.582.515-.103 0-.172-.035-.206-.172v-.137l.046-.233c-.435.31-.87.508-1.075.508-.308 0-.48-.172-.514-.412-.206.274-.445.412-.754.412-.352 0-.696-.24-.862-.593-.244.275-.523.553-.852.764-.48.309-1.028.549-1.68.549-.582 0-1.097-.309-1.371-.583-.412-.377-.651-.96-.686-1.509-.205-1.68.823-3.84 2.4-4.8.378-.205.755-.343 1.132-.343zm9.77 3.291c-.104 0-.172.172-.172.343 0 .274.137.583.309.755a1.74 1.74 0 0 0 .102-.583c0-.343-.137-.515-.24-.515z"/></svg></span></span></span>Canva</div>
+     <div class="fk-step-title">1マスずつ、180×180pxで書き出す</div>
+     <p class="fk-step-text">Canvaで<strong>「カスタムサイズ」から 180 × 180 px</strong> のデザインを作り、シート画像を読み込んで<strong>使いたい1マスだけ</strong>を枠に収めます。あとは<strong>PNG・背景透過</strong>でダウンロード。これを個数ぶんくり返します。</p>
+     
+     <div class="fk-step-img-grid"><div><div class="fk-step-img"><img src="assets/canva-1-size.jpg" alt="Canvaのカスタムサイズ画面。幅180、高さ180、単位pxを入力して「新しいデザインを作成」を押すところ" loading="lazy"></div><p class="fk-step-img-cap">① 幅180 × 高さ180 px でデザインを作る</p></div><div><div class="fk-step-img"><img src="assets/canva-2-place.jpg" alt="Canvaの編集画面。180×180pxのカンバスいっぱいにキャラクターが配置されている" loading="lazy"></div><p class="fk-step-img-cap">② 1マスだけを枠に収めて、PNGで書き出す</p></div></div>
+     
+     <div style="margin-top:14px;text-align:center"><a href="https://www.canva.com/" target="_blank" rel="noopener" style="display:inline-block;padding:11px 22px;border-radius:999px;background:var(--sk-accent2);color:#fff;font-weight:800;font-size:13.5px;text-decoration:none">Canvaにアクセスする &rarr;</a></div><div class="sp-callout" style="margin-top:16px"><b>ここだけ、Canva Proが必要になります。</b><p>LINEの絵文字は<b>背景が透明でないと申請できません</b>。ところがCanvaの<b>「背景リムーバ」も「背景透過」でのダウンロードも、どちらもPro機能</b>です（30日間の無料トライアルあり）。<br>Codexルートなら、この工程そのものが出てきません。</p></div>
+    </div>
+   </div>
+   <div class="fk-step">
+    <div class="fk-step-num">4</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label">スマホ</div>
+     <div class="fk-step-title">001から連番をつけて、ZIPにまとめる</div>
+     <p class="fk-step-text">書き出した画像を、下のとおりの名前に付け替えます。あわせて<strong>トークの絵文字一覧に出る見出し画像</strong>を<strong>96×74px</strong>で1枚だけ作り、<code>tab.png</code> にしてください。<br>そろったら全部を選んでZIPに。iPhoneは「ファイル」アプリで選んで<strong>「圧縮」</strong>、Androidもファイルアプリから同じようにできます。</p>
+     
+     
+     
+     <div style="margin-top:16px"><div class="sp-tree"><b>line-emoji</b>　<i>← このフォルダを丸ごとZIPにする</i><br>&nbsp;├ 001.png　<i>180×180px</i><br>&nbsp;├ 002.png<br>&nbsp;├ 003.png　<i>… 008.png まで</i><br>&nbsp;└ <b>tab.png</b>　<i>96×74px（1枚だけ）</i></div><p class="sp-tree-cap">中に<b>フォルダを入れない</b>のがコツです。画像だけをまっすぐ並べてください。</p></div>
+    </div>
+   </div>
+ </div>
+</section>
+</div>
+
+<section class="sp-sec sp-route" style="background:var(--sk-surface)">
+ <div class="sp-wrap">
+  <div class="sp-route-head"><span class="sp-route-badge">ここで合流</span><h2 class="sp-route-title">LINEに申請する</h2><p class="sp-route-path">どちらのルートでも共通</p></div><p class="sp-lead" style="margin-bottom:0">LINE Creators Marketは<strong>ブラウザで動く</strong>ので、パソコンからでもスマホからでも申請できます。</p>
+ </div>
+</section>
+
+<section class="fk-steps">
+ <div class="fk-steps-wrap">
+  <div class="fk-step">
+    <div class="fk-step-num">1</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label">LINE Creators Market</div>
+     <div class="fk-step-title">ZIPをアップロードして、リクエストを送る</div>
+     <p class="fk-step-text">ログインして「新規登録」→<strong>「絵文字」</strong>。クリエイター名・タイトル・説明文を入れて<strong>ZIPをアップロード</strong>し、登録された中から<strong>メイン画像を4つ</strong>選びます。提供地域は<strong>日本＋台湾＋タイ</strong>。AI使用の項目を事実どおりに設定して、リクエストを送信します。</p>
+     <div class="fk-checklist"><span>アップするのはZIP（シート画像ではない）</span><span>AI使用は事実どおりに申告する</span></div>
+     <div class="fk-step-img-grid"><div><div class="fk-step-img"><img src="assets/line-new.jpg" alt="LINE Creators Marketの新規登録画面。スタンプ・絵文字・着せかえの3つのボタンが並んでいる" loading="lazy"></div><p class="fk-step-img-cap">① 「絵文字」を選ぶ（スタンプではありません）</p></div><div><div class="fk-step-img"><img src="assets/line-area.jpg" alt="販売エリアの設定画面。日本・台湾・タイにチェックが入っている" loading="lazy"></div><p class="fk-step-img-cap">② 提供地域に日本＋台湾＋タイ</p></div></div>
+     
+     <div style="margin-top:14px;text-align:center"><a href="https://creator.line.me/ja/" target="_blank" rel="noopener" style="display:inline-block;padding:11px 22px;border-radius:999px;background:var(--sk-accent2);color:#fff;font-weight:800;font-size:13.5px;text-decoration:none">LINE Creators Marketへ &rarr;</a></div>
+    </div>
+   </div>
+   <div class="fk-step">
+    <div class="fk-step-num">2</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label">審査</div>
+     <div class="fk-step-title">通れば、あとは並ぶだけ</div>
+     <p class="fk-step-text">承認されると、設定に応じてLINEのショップとLINE STOREに並びます。差し戻されても、指摘された箇所を直して出し直せます。1回勝負ではありません。</p>
+     
+     
+     
+     
+    </div>
+   </div>
+ </div>
+</section>
+
+<section class="sp-sec sp-route">
+ <div class="sp-wrap">
+  <div class="sp-route-head"><span class="sp-route-badge">発展 ／ Codexルート限定</span><h2 class="sp-route-title">同じ40個が、動き出します</h2><p class="sp-route-path">ここからはパソコンが必要です</p></div><p class="sp-lead" style="margin-bottom:0">静止版ができたのと<strong>同じCodexの画面で</strong>3本目を送ると、その40個がそのままアニメーション絵文字（APNG）になります。<strong>作り直しではなく、上乗せです。</strong><br><strong>スマホルートでは、ここから先には進めません。</strong>動く絵文字は1個につき5〜20コマを作って1枚にまとめる必要があるので、どうしてもパソコン側の処理が要ります。</p>
+ </div>
+</section>
+
+<section class="fk-steps">
+ <div class="fk-steps-wrap">
+  <div class="fk-step">
+    <div class="fk-step-num">1</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label"><span class="fk-step-icon"><span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#fff;flex:none;box-shadow:0 1px 4px rgba(0,0,0,.12)"><span style="width:13px;height:13px;color:#10A37F;display:block"><svg role="img" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path fill="currentColor" d="M22.2819 9.8211a5.9847 5.9847 0 0 0-.5157-4.9108 6.0462 6.0462 0 0 0-6.5098-2.9A6.0651 6.0651 0 0 0 4.9807 4.1818a5.9847 5.9847 0 0 0-3.9977 2.9 6.0462 6.0462 0 0 0 .7427 7.0966 5.98 5.98 0 0 0 .511 4.9107 6.051 6.051 0 0 0 6.5146 2.9001A5.9847 5.9847 0 0 0 13.2599 24a6.0557 6.0557 0 0 0 5.7718-4.2058 5.9894 5.9894 0 0 0 3.9977-2.9001 6.0557 6.0557 0 0 0-.7475-7.0729zm-9.022 12.6081a4.4755 4.4755 0 0 1-2.8764-1.0408l.1419-.0804 4.7783-2.7582a.7948.7948 0 0 0 .3927-.6813v-6.7369l2.02 1.1686a.071.071 0 0 1 .038.052v5.5826a4.504 4.504 0 0 1-4.4945 4.4944zm-9.6607-4.1254a4.4708 4.4708 0 0 1-.5346-3.0137l.142.0852 4.783 2.7582a.7712.7712 0 0 0 .7806 0l5.8428-3.3685v2.3324a.0804.0804 0 0 1-.0332.0615L9.74 19.9502a4.4992 4.4992 0 0 1-6.1408-1.6464zM2.3408 7.8956a4.485 4.485 0 0 1 2.3655-1.9728V11.6a.7664.7664 0 0 0 .3879.6765l5.8144 3.3543-2.0201 1.1685a.0757.0757 0 0 1-.071 0l-4.8303-2.7865A4.504 4.504 0 0 1 2.3408 7.872zm16.5963 3.8558L13.1038 8.364 15.1192 7.2a.0757.0757 0 0 1 .071 0l4.8303 2.7913a4.4944 4.4944 0 0 1-.6765 8.1042v-5.6772a.79.79 0 0 0-.407-.667zm2.0107-3.0231l-.142-.0852-4.7735-2.7818a.7759.7759 0 0 0-.7854 0L9.409 9.2297V6.8974a.0662.0662 0 0 1 .0284-.0615l4.8303-2.7866a4.4992 4.4992 0 0 1 6.6802 4.66zM8.3065 12.863l-2.02-1.1638a.0804.0804 0 0 1-.038-.0567V6.0742a4.4992 4.4992 0 0 1 7.3757-3.4537l-.142.0805L8.704 5.459a.7948.7948 0 0 0-.3927.6813zm1.0976-2.3654l2.602-1.4998 2.6069 1.4998v2.9994l-2.5974 1.4997-2.6067-1.4997Z"/></svg></span></span></span>Codex</div>
+     <div class="fk-step-title">プロンプト③を、同じ画面に送る</div>
+     <p class="fk-step-text">1コマ目は静止版と同じ絵のままなので、<strong>見た目はそのままで動きだけが足されます。</strong>フレーム数・ループ回数・再生時間・容量は、LINEの規格に収まるまで自動で調整されます。</p>
+     
+     <div class="fk-step-img"><img src="assets/animated-preview.gif" alt="水色のキャラクターの動くLINE絵文字が8個、同時に再生されているプレビュー" loading="lazy"></div><p class="fk-step-img-cap">実際に出てきた動く絵文字（別のキャラクターで試したもの）</p>
+     <details class="fk-prompt">
+      <summary class="fk-prompt-h"><span>プロンプト③ 動く絵文字にする</span><span class="fk-prompt-h-right"><button class="fk-prompt-copy" type="button">コピー</button><span class="fk-prompt-arrow">&#9662;</span></span></summary>
+      <pre>あなたは、完成済みの静止LINE絵文字40個を、キャラクターの同一性と第1フレームを保ったまま、LINE Creators Market向けアニメーション絵文字へ拡張する制作エージェントです。
+
+## 入力
+
+- 静止絵文字 `001.png`～`040.png`
+- タブ画像 `tab.png`
+- 前工程の監査レポートがあれば利用する
+
+元の静止絵文字は上書きせず、`line-animated-emoji-output/` へ別成果物として保存してください。
+
+## 成果物
+
+- `emoji/001.png`～`emoji/040.png`：APNG
+- `emoji/tab.png`
+- `line-animated-emoji-40.zip`
+- `motion-plan.json`
+- `animated-preview.gif`
+- `first-frame-contact-sheet.png`
+- `reports/spec-snapshot.md`
+- `reports/animation-audit.csv`
+- `reports/review-checklist.md`
+- `reports/compression-log.md`
+
+## 公式仕様の確認
+
+制作開始時に、LINE Creators Marketの公式アニメーション絵文字制作ガイドと審査ガイドラインを確認してください。確認日、URL、必要数、180×180px、APNG、透過、1個あたりの容量、フレーム数、1ループの再生時間、ループ数、総再生時間、ZIP上限、ファイル名を記録します。
+
+公式仕様とこのプロンプトが異なる場合は公式仕様を優先します。公式ページへ接続できない場合はその事実を明記し、既知の暫定値として、5～20フレーム、1ループ1・2・3・4秒、1～4ループ、総再生4秒以内、1個300KB以下を使用します。
+
+## 第1フレームの絶対条件
+
+- 各APNGの第1フレームは、対応する静止絵文字と視覚的に同じ完成状態にする。
+- 動かなければ意味が分からない構成にしない。
+- 第1フレームを待機姿勢、予備動作、空白、途中状態にしない。
+- 静止絵文字の顔、色、輪郭、固有識別点を変更しない。
+
+## 動きの設計
+
+まず40個すべてについて `motion-plan.json` を作ります。各項目に次を記録してください。
+
+- id
+- intended_meaning
+- primary_motion
+- moving_region
+- fixed_region
+- effect_motion
+- motion_path
+- tempo
+- frame_count_target
+- loop_duration_seconds
+- loop_count
+- first_frame_rule
+- fallback_if_oversize
+
+似た意味でも動きが重複しすぎないよう、縦、横、回転、伸縮、反動、往復、落下、浮上、組み上がり、分離、粒子、波紋などを使い分けます。
+
+## 品質ルール
+
+- 画像全体を上下へ動かすだけ、揺らすだけ、拡大縮小するだけの処理を完成品にしない。
+- キャラクター絵文字では、手、顔、頭、胴体、涙、汗、小物、エフェクトなど意味を担う部分のうち、最低1つを主動作にする。
+- 元画像にパーツレイヤーがない場合は、色・連結領域・位置マスクを用いて安全に動かせる領域を分離する。
+- パーツ分離が不可能な項目は、第1フレームを維持しつつ、涙、汗、ハート、光、炎、速度線、波紋など意味に固有のエフェクトを主動作として追加する。
+- それでも全体移動しか作れない場合は自動合格にせず、監査レポートへ `needs_visual_revision` と記録する。
+- 033～040の独立記号は、構成部品の出現、合流、分離、落下、点灯などを用いる。
+- 全フレームで見切れ、輪郭欠損、透明背景の汚れ、色ずれを防ぐ。
+
+## 標準アニメーション設定
+
+最初から全項目を20フレーム固定にしないでください。標準は次とします。
+
+- 10フレーム
+- 1ループ2秒
+- 2ループ
+- 総再生4秒
+
+速い動きは8～12フレーム、滑らかさが必要で容量に余裕がある項目は12～20フレームを使用できます。フレーム数を増やすことより、意味の伝達と300KB以下を優先します。
+
+## 容量最適化
+
+APNGが公式上限を超えた場合は、次の順で調整し、各変更を `compression-log.md` に記録します。
+
+1. 不要な透明領域とメタデータを削除
+2. 可逆圧縮を最適化
+3. 見た目を壊さない範囲で色数を削減
+4. 重複・近似フレームを統合
+5. 20→16→12→10→8フレームの順に削減
+6. 動きの振幅や粒子数を減らす
+
+再生時間は必ず公式が認める秒数に保ち、フレーム表示時間を再配分してください。視認性を損なう縮小で帳尻を合わせないでください。
+
+## 自動監査
+
+各APNGについて `animation-audit.csv` に次を記録します。
+
+- id
+- width
+- height
+- format
+- file_size_bytes
+- frame_count
+- loop_duration_seconds
+- loop_count
+- total_duration_seconds
+- alpha_min
+- alpha_max
+- first_frame_similarity
+- frame_difference_detected
+- edge_clipping_detected
+- whole_sprite_only_motion
+- pass
+- notes
+
+最低限、寸法、形式、透過、容量、フレーム数、再生時間、ループ、フレーム差、第1フレームを検査します。
+
+## プレビュー
+
+- 40個の第1フレーム一覧を作る。
+- 代表8個以上を同時再生するGIFを作る。
+- 24～32px相当の表示でも主動作が分かるか確認する。
+- 全体移動のみ、意味が弱い、カクつく、色が変わる項目をチェックリストに記録する。
+
+## ZIP検査
+
+- ZIP直下に必要なAPNGとタブ画像だけを置く。
+- ZIP作成後に再展開し、40個すべてを再検査する。
+- プレビュー、レポート、中間フレーム、システムファイルをZIPへ入れない。
+
+## 権利・申請
+
+- 元画像に権利上の懸念がある場合は警告する。
+- AI使用申告が必要であることをチェックリストへ記載する。
+- LINEへのログイン、アップロード、販売開始、審査申請は自動実行しない。
+- 自動検査の合格はLINE審査通過を保証しない。
+
+## 実行ルール
+
+- 40個の入力が揃っていれば、追加確認せず設計・制作・検査まで進める。
+- 安全に自動修正できる容量・寸法・透過問題は修正して再検査する。
+- デザイン変更が必要な問題だけを、番号と理由を添えてユーザーへ確認する。
+- 新しいソフトやパッケージが必要なら、名前、用途、配布元を説明して許可を求める。
+
+## 完了条件
+
+- 40個のAPNGとタブ画像が完成
+- 全ファイルが公式の技術仕様に合格
+- ZIP再展開検査に合格
+- 動画プレビュー、CSV監査、チェックリストが完成
+- 全体移動だけの項目を隠さず報告
+- 最終回答にZIPへのリンク、合格数、要目視修正数、残る申請作業を記載
+
+条件を満たすまで、安全に修正できる問題は修正して再検査してください。</pre>
+     </details>
+     
+    </div>
+   </div>
+   <div class="fk-step">
+    <div class="fk-step-num">2</div>
+    <div class="fk-step-body">
+     <div class="fk-step-label">LINE Creators Market</div>
+     <div class="fk-step-title">もう1本、別の商品として出す</div>
+     <p class="fk-step-text">静止絵文字とアニメーション絵文字は<strong>別々の登録</strong>です。カテゴリを<strong>「アニメーション絵文字」</strong>にして、同じ手順でZIPを上げるだけ。つまり<strong>同じキャラクターで2本並べられる</strong>ことになります。</p>
+     
+     
+     
+     
+    </div>
+   </div>
+ </div>
+</section>
+
+<section class="sp-sec">
+ <div class="sp-wrap">
+  <p class="sp-eyebrow">公式の規格</p><h2 class="sp-title">サイズの決まりは、<br class="sk-br">Codexが合わせます</h2><p class="sp-lead">Codexルートで進むかぎり、この数値を気にする場面はありません。スマホルートの人と、自分で確かめたい人だけどうぞ。</p>
+  <details class="sp-fold"><summary>LINE公式ガイドラインの数値を見る（いまは開かなくてOK）</summary><div class="sp-fold-body"><div class="sp-table" style="margin-bottom:14px">
+   <p class="sp-table-cap">静止絵文字｜LINE Creators Market 公式ガイドライン</p>
+   <dl style="margin:0">
+   <div class="sp-row"><dt>絵文字画像</dt><dd><b>180×180px</b>／8〜40個</dd></div>
+   <div class="sp-row"><dt>トークルームタブ画像</dt><dd>96×74px を1個</dd></div>
+   <div class="sp-row"><dt>ファイル形式</dt><dd>PNG。背景は透過</dd></div>
+   <div class="sp-row"><dt>容量</dt><dd>1個あたり1MB以下／ZIP合計20MB以下</dd></div>
+   <div class="sp-row"><dt>その他</dt><dd>解像度72dpi以上・カラーモードRGB</dd></div>
+   <div class="sp-row"><dt>テキスト</dt><dd>クリエイター名50文字以内／タイトル40文字以内／説明文160文字以内（全角は2文字換算）</dd></div>
+   </dl>
+  </div>
+  <div class="sp-table" style="margin-bottom:14px">
+   <p class="sp-table-cap">アニメーション絵文字｜LINE Creators Market 公式ガイドライン</p>
+   <dl style="margin:0">
+   <div class="sp-row"><dt>絵文字画像</dt><dd><b>180×180px</b>／APNG／8〜40個</dd></div>
+   <div class="sp-row"><dt>フレーム数</dt><dd>1個あたり<b>5〜20フレーム</b></dd></div>
+   <div class="sp-row"><dt>再生</dt><dd>ループ1〜4回／<b>総再生時間4秒以下</b></dd></div>
+   <div class="sp-row"><dt>容量</dt><dd>1個あたり<b>300KB以下</b>／ZIP合計20MB以下</dd></div>
+   <div class="sp-row"><dt>メイン画像</dt><dd>登録した絵文字から4つ選ぶ</dd></div>
+   </dl>
+  </div></div></details>
+  <p class="sp-src">出典：<a href="https://creator.line.me/ja/guideline/emoji/" target="_blank" rel="noopener">絵文字制作ガイドライン</a>／<a href="https://creator.line.me/ja/guideline/animationemoji/" target="_blank" rel="noopener">アニメーション絵文字制作ガイドライン</a>（2026年8月30日確認）。規格は変わることがあるので、申請前に公式ページで確認してください。</p>
+ </div>
+</section>
+
+<section class="fk-note-section">
+  <div class="fk-note"><b>シート画像を、そのままアップロードしない。</b><br>LINEに上げるのは、分割・透過・180px化まで済ませた<b>40枚入りのZIP</b>のほうです。</div>
+  <div class="fk-note"><b>権利のあるものは使わない。</b><br>実在するキャラクター、企業ロゴ、有名人、特定の作家の画風はNGです。プロンプト①には、この禁止条件が最初から書き込んであります。</div>
+  <div class="fk-note"><b>AIを使ったことは、申告する。</b><br>申請画面にその項目があります。事実どおりに設定してください。</div>
+  <div class="fk-note"><b>検査に通ることと、審査に通ることは別。</b><br>Codexが出すレポートは「サイズ・形式・透過・容量が規格に合っているか」という機械的な検査です。審査の合否や売上を保証するものではありません。分配額の「約59円 → 約66円」も目安です。</div>
+</section>
+
+<section class="fk-faq">
+ <p class="fk-section-eyebrow">よくある質問</p>
+ <h2 class="fk-section-title">気になるところ</h2>
+ <div class="fk-faq-wrap">
+  <details class="fk-faq-item is-fold"><summary class="fk-faq-q"><span>Q</span>そもそもCodexって何ですか</summary><div class="fk-faq-a">ChatGPTのデスクトップアプリの中にある、パソコンの中で作業してくれるモードです。絵を作るだけでなく、それを切ったり、サイズを揃えたり、ZIPにまとめたりというファイル操作までできます。使うにはChatGPTの有料プランが必要です。</div></details>
+  <details class="fk-faq-item is-fold"><summary class="fk-faq-q"><span>Q</span>スマホだけでできますか</summary><div class="fk-faq-a">できます。スマホルートがそれです。ただし切り抜き・透過・180px化が1個ずつ手作業になるので、まずは8個で1本出すのがおすすめです。動く絵文字はスマホルートでは作れません。</div></details>
+  <details class="fk-faq-item is-fold"><summary class="fk-faq-q"><span>Q</span>40個も内容が思いつきません</summary><div class="fk-faq-a">考える必要はありません。プロンプト①に40個の内訳が決め打ちで入っています。あいさつ8個・明るい反応8個・会話のリアクション8個・困った感情8個・記号8個です。</div></details>
+  <details class="fk-faq-item is-fold"><summary class="fk-faq-q"><span>Q</span>静止と動く、どちらから出すべきですか</summary><div class="fk-faq-a">まず静止で1本。プロンプト③は「完成した静止絵文字の1コマ目を保つ」設計なので、静止版がないと動く版が作れません。</div></details>
+  <details class="fk-faq-item is-fold"><summary class="fk-faq-q"><span>Q</span>途中でキャラクターの見た目が変わってしまいます</summary><div class="fk-faq-a">基準になるのは、最初に出てきた1枚だけです。直前のシートを参照させると、ズレが積み上がります。ズレたときは、そのSETだけ作り直すのが早いです。</div></details>
+ </div>
+</section>
+</main>
+
+<section class="sk-gap">
+ <div class="sk-wrap">
+  <div class="sk-head"><h2 class="sk-h">手順は、<br class="sk-br">全部渡しました。<br>ただ、厳しいことを言います。</h2></div>
+  <p class="sk-gap-lead">
+   <strong>これだけでは、うまくいきません。</strong><br>
+   僕自身の経験から、断言します。<br><br>
+   一回絵文字が出ることと、<br>それが収入になり続けることは、<br>まったく別の話です。
+  </p>
+  <ul class="sk-gap-list">
+   <li>どんなキャラクターなら、実際に手に取ってもらえるのか</li>
+   <li>1セット出して終わりにせず、2セット目・3セット目をどう続けるか</li>
+   <li>そもそも自分は、これを続けるべきなのか</li>
+  </ul>
+  <p class="sk-gap-close">ここで止まる人が、いちばん多いです。</p>
+
+  <div class="sk-story">
+   <span class="sk-story-tag">僕も、同じ止まり方をしました</span>
+   <p>偉そうに書いていますが、僕は失敗の方がずっと多いです。</p>
+   <p>投資、仮想通貨、プログラミング、物販。<strong>全部、自分で調べて、自分でやりました。</strong></p>
+   <p>仮想通貨の送金は、ひとつ間違えたらもう取り戻せません。それをろくに調べないままやって、<strong>よく分かっていないところに20万円を送りました。僕の一ヶ月分の収入です。</strong></p>
+   <p>取り戻すには一ヶ月ただ働きするしかない。そう気づいたとき、<strong>涙が出ました。</strong>調べなかった自分、ちゃんと分かっていなかった自分のせいなのに。</p>
+   <p><span class="sk-punch">自分で勝手に分かった気になっていただけで、結果には、まったく結びついていませんでした。</span></p>
+   </div>
+ </div>
+</section>
+
+
+<script>document.documentElement.classList.add('sk-js');</script>
+<section class="sk-diff">
+ <div class="sk-wrap">
+  <div class="sk-d-q sk-r">
+   <span class="sk-d-q-tag">ひとつだけ、聞かせてください</span>
+   <p>ひとりで調べて、<br>うまくいかなかったこと。<br><b>ありませんか。</b></p>
+  </div>
+
+  <p class="sk-d-p sk-r">僕は、無理でした。<br>
+   独学では、どうにもならなかった。<br>
+   <b>身をもって、知ったことです。</b></p>
+
+  <p class="sk-d-lead sk-r">じゃあ、何が正解だったのか。</p>
+
+  <div class="sk-d-ans sk-r"><b>その道のプロに、教わる。</b><br>
+   これでした。</div>
+
+  <p class="sk-d-close sk-r">一見、遠回りに見えて。<br>これが、一番早かったんです。</p>
+ </div>
+</section>
+
+<section class="sk-cta" id="sk-cta">
+ <div class="sk-wrap">
+  <div class="sk-head"><h2 class="sk-h">まずは、聞くところから<br class="sk-br">始めてみませんか。</h2></div>
+  <p class="sk-bridge">同じ失敗を繰り返した僕だから、言えます。<br><br><b>ここまで読んでくれたあなたには、<br>同じ思いをしてほしくない。</b><br><br>だから、無料で話せる場を用意しました。<br><br><strong>実際にこの道で結果を出している人が、<br>直接、話を聞きます。</strong><br><br><strong>何かを決めてから来る必要はありません。</strong><br>決まっていないことを、<br>一緒に決める場です。</p>
+
+  <a class="sk-line-btn" href="https://utage-system.com/line/open/nj3MC6diybeh?mtid=e7lKz8UUmrSO" target="_blank" rel="noopener">
+   <span class="sk-tap">＼ タップして ／</span>
+   <span class="sk-btn-main"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3v4.2l4.8-4.2H20a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg>公式LINEで無料で受け取る</span>
+  </a>
+
+  <p class="sk-after-btn">追加すると、メニューの中に案内があります。</p><div class="sk-extra">さらに、登録した方には<br><b>『AIマネタイズの教科書』</b>もお渡ししています。<br>AIで稼いでいく手順が一通り分かるので、<br>話す前に目を通しておくと早いです。</div><p class="sk-scarcity">※ 内容は予告なく変更・終了する場合があります。</p>
+  <p class="sk-note">タップすると、公式LINEの友だち追加ページへ移動します。</p>
+ </div>
+</section>
+
+
+<footer class="sk-footer">
+ <p class="sk-tagline">CodexでLINE絵文字40個を作るガイド — 貼るのはプロンプト2本だけ</p>
+ <a class="sk-footer-ig" href="https://www.instagram.com/smitch_ai_works/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>Instagram：@smitch_ai_works</a>
+ <p>すみっち ｜ 30歳・現役エンジニア／AI×副業を発信中</p>
+ <p class="sk-copy">&copy; 2026 @smitch_ai_works. All Rights Reserved.</p>
+</footer>
+
+<script>
+document.querySelectorAll('.fk-prompt-copy').forEach(function(btn){
+  btn.addEventListener('click', function(e){
+    e.preventDefault();
+    e.stopPropagation();
+    var pre = btn.closest('.fk-prompt').querySelector('pre');
+    navigator.clipboard.writeText(pre.textContent).then(function(){
+      var t = btn.textContent; btn.textContent = '✓ コピー済み';
+      setTimeout(function(){ btn.textContent = t; }, 1500);
+    });
+  });
+});
+</script>
+
+<script>
+/* コピー直後のひとこと。読者が「目的を達成した瞬間」だけに出す。
+   コピーボタンが無いページでは、6.5割まで読み進めた時点で1度だけ出す。 */
+(function(){
+  var cta = document.getElementById('sk-cta');
+  if (!cta) return;
+  var shown = 0, el = null, timer = null;
+
+  function build(){
+    el = document.createElement('a');
+    el.className = 'sk-cue';
+    el.href = '#sk-cta';
+    el.innerHTML = '<span>コピーできました。<b>ほかの型もまとめて置いてあります</b></span>'
+                 + '<span class="sk-cue-arrow">&darr;</span>';
+    var x = document.createElement('button');
+    x.className = 'sk-cue-x'; x.type = 'button';
+    x.setAttribute('aria-label', '閉じる');
+    x.textContent = '\u00d7';
+    x.addEventListener('click', function(ev){ ev.preventDefault(); ev.stopPropagation(); hide(); shown = 9; });
+    el.appendChild(x);
+    el.addEventListener('click', function(){ hide(); });
+    document.body.appendChild(el);
+  }
+
+  function ctaVisible(){
+    var r = cta.getBoundingClientRect();
+    return r.top < innerHeight && r.bottom > 0;
+  }
+  function hide(){ if (el) el.classList.remove('is-on'); clearTimeout(timer); }
+  function show(){
+    if (shown >= 2 || ctaVisible()) return;
+    if (!el) build();
+    shown++;
+    /* rAF はバックグラウンドタブで止まるため使わない */
+    setTimeout(function(){ el.classList.add('is-on'); }, 20);
+    clearTimeout(timer);
+    timer = setTimeout(hide, 8000);
+  }
+
+  var buttons = [].slice.call(document.querySelectorAll('button'))
+                  .filter(function(b){ return /コピー/.test(b.textContent || ''); });
+
+  if (buttons.length) {
+    document.addEventListener('click', function(e){
+      var b = e.target && e.target.closest ? e.target.closest('button') : null;
+      if (b && /コピー/.test(b.textContent || '') && !b.classList.contains('sk-cue-x')) {
+        setTimeout(show, 550);
+      }
+    }, true);
+  } else {
+    var fired = false;
+    addEventListener('scroll', function(){
+      if (fired) return;
+      var h = document.documentElement.scrollHeight - innerHeight;
+      if (h > 0 && scrollY / h > 0.65) { fired = true; show(); }
+    }, { passive: true });
+  }
+  addEventListener('scroll', function(){ if (el && el.classList.contains('is-on') && ctaVisible()) hide(); },
+                   { passive: true });
+})();
+</script>
+
+<script>
+/* 終盤ブロックのスクロール表示。IntersectionObserver が無ければ常時表示に戻す */
+(function(){
+  var d = document;
+  if (!('IntersectionObserver' in window)) { d.documentElement.classList.remove('sk-js'); return; }
+  var t = [].slice.call(d.querySelectorAll(
+    '.sk-diff .sk-r, .sk-gap-lead, .sk-gap-list, .sk-gap-close, .sk-story, .sk-bridge, .sk-line-btn, .sk-extra'));
+  t.forEach(function(el){ el.classList.add('sk-r'); });
+  var io = new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if (e.isIntersecting) { e.target.classList.add('is-in'); io.unobserve(e.target); }
+    });
+  }, { rootMargin: '0px 0px -12% 0px', threshold: 0.08 });
+  t.forEach(function(el){ io.observe(el); });
+  setTimeout(function(){ t.forEach(function(el){ el.classList.add('is-in'); }); }, 3000);
+})();
+</script>
+<script>
+(function(){
+ document.querySelectorAll('.sp-tab').forEach(function(b){
+  b.addEventListener('click',function(){
+   var g=b.dataset.tab,i=b.dataset.i;
+   document.querySelectorAll('.sp-tab[data-tab="'+g+'"]').forEach(function(x){
+    x.setAttribute('aria-selected', x.dataset.i===i ? 'true':'false');
+   });
+   document.querySelectorAll('.sp-panel[data-panel="'+g+'"]').forEach(function(p){
+    p.hidden = p.dataset.i!==i;
+    /* 隠れている間はスクロール監視が効かないので、開いた側は出しきっておく */
+    if(!p.hidden){ p.querySelectorAll('.sp-rv').forEach(function(el){ el.classList.add('is-in'); }); }
+   });
+   b.scrollIntoView({block:'nearest'});
+  });
+ });
+})();
+</script>
+<script>
+(function(){
+ if(!('IntersectionObserver' in window)) return;
+ var t=[].slice.call(document.querySelectorAll(
+  '.fk-step,.sp-stat,.sp-table,.sp-fold,.fk-flow-node,.sp-tab,.fk-note,.sp-tree,.fk-faq-item,.sp-callout'));
+ t.forEach(function(el){ el.classList.add('sp-rv'); });
+ var io=new IntersectionObserver(function(es){
+  es.forEach(function(e){
+   if(e.isIntersecting){ e.target.classList.add('is-in'); io.unobserve(e.target); }
+  });
+ },{rootMargin:'0px 0px -6% 0px',threshold:0.04});
+ t.forEach(function(el){ io.observe(el); });
+ /* 監視が働かない環境で消えたままにならないように */
+ setTimeout(function(){ t.forEach(function(el){ el.classList.add('is-in'); }); }, 3000);
+})();
+</script>
+<a class="sp-dock" id="sp-dock" href="https://utage-system.com/line/open/nj3MC6diybeh?mtid=e7lKz8UUmrSO" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 2H4a2 2 0 0 0-2 2v11a2 2 0 0 0 2 2h3v4.2l4.8-4.2H20a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2z"/></svg><span class="sp-dock-t">公式LINEで無料で受け取る<small>このページの手順の、その先の話</small></span><span class="sp-dock-a">&rarr;</span></a>
+<script>
+(function(){
+ var d = document.getElementById('sp-dock');
+ var cta = document.getElementById('sk-cta');
+ if (!d) return;
+ var closed = false;
+ var x = document.createElement('button');
+ x.className = 'sp-dock-x'; x.type = 'button';
+ x.setAttribute('aria-label','閉じる');
+ x.textContent = '\u00d7';
+ x.addEventListener('click', function(e){
+  e.preventDefault(); e.stopPropagation();
+  closed = true; d.classList.remove('is-on');
+  document.body.classList.remove('sp-has-dock');
+ });
+ d.appendChild(x);
+
+ function ctaVisible(){
+  if (!cta) return false;
+  var r = cta.getBoundingClientRect();
+  return r.top < innerHeight && r.bottom > 0;
+ }
+ function update(){
+  /* 1画面ぶん読んでから出す。本物のCTAが見えている間は引っ込める */
+  var on = !closed && scrollY > innerHeight * 0.9 && !ctaVisible();
+  d.classList.toggle('is-on', on);
+  document.body.classList.toggle('sp-has-dock', on);
+ }
+ addEventListener('scroll', update, { passive: true });
+ addEventListener('resize', update, { passive: true });
+ update();
+})();
+</script>
+</body>
+</html>
